@@ -1,0 +1,94 @@
+version: "3.7"
+
+################################################################################
+# NETWORKING CONFIGURATION
+################################################################################
+
+networks:
+    adjuftments:
+        driver: bridge
+
+################################################################################
+# SERVICES CONFIGURATION
+################################################################################
+
+services:
+
+    ####################################
+    # POSTGRES DATABASE
+    ####################################
+
+    database:
+        container_name: postgres
+        image:          postgres:13.1
+        environment:
+            - POSTGRES_USER=${DATABASE_USER}
+            - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+            - POSTGRES_DB=${DATABASE_DB}
+        volumes:
+            - ${DOCKER_DIRECTORY}/postgres/:/var/lib/postgresql/data
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+        restart:        unless-stopped
+        networks:
+            adjuftments: null
+        ports:
+            - "5432:5432"
+
+    ####################################
+    # FLASK WEBSERVER
+    ####################################
+
+    webserver:
+        container_name: webserver
+        build:
+            context:    ${DOCKER_DIRECTORY}/build/
+            dockerfile: Dockerfile
+        networks:
+            adjuftments: null
+        ports:
+            - "5000:5000"
+        volumes:
+            - ${DOCKER_DIRECTORY}/adjuftments_v2:/home/adjuftments_v2/adjuftments_v2
+        restart:        ${UNIVERSAL_RESTART_POLICY}
+        depends_on:
+            - database
+        labels:
+            traefik.enable: false
+        environment:
+            FLASK_APP:         "/home/adjuftments_v2/adjuftments_v2/views.py"
+            FLASK_ENV:         "development"
+            AIRTABLE_API_KEY:  ${AIRTABLE_API_KEY}
+            DATABASE_USER:     ${DATABASE_USER}
+            DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+            DATABASE_DB:       ${DATABASE_DB}
+        working_dir:    /home/adjuftments_v2/adjuftments_v2
+        command:        flask run --host=0.0.0.0
+
+    ####################################
+    # ADJUFTMENTS AIRTABLE EXECUTOR
+    ####################################
+
+    adjuftments:
+        container_name: adjuftments
+        build:
+            context:    ${DOCKER_DIRECTORY}/build/
+            dockerfile: Dockerfile
+        networks:
+            adjuftments: null
+        volumes:
+            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
+        restart:        on-failure
+        depends_on:
+            - database
+            - webserver
+        labels:
+            traefik.enable: false
+        working_dir:    /home/adjuftments_v2/
+        command:        python scripts/run_adjuftments.py
+        environment:
+            AIRTABLE_API_KEY: ${AIRTABLE_API_KEY}
+            FLASK_SETTINGS:   /home/adjuftments_v2/config/flask-sqlalchemy.py
+            DATABASE_HOST:    ${DATABASE_HOST}
