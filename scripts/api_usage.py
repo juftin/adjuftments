@@ -4,16 +4,15 @@
 
 from json import loads
 
-from pandas import DataFrame
-from pandas.io.json import json_normalize
 from requests import get
 
-response = get(url="http://localhost:5000/api/1.0/airtable/expenses/",
-               params={})
+from adjuftments_v2 import Splitwise
+
+response = get(url="http://localhost:5000/api/1.0/airtable/expenses",
+               params=dict(formula="OR({Imported}=True(), {Delete}=True())"))
 response_content = loads(response.content)
 
-df = DataFrame(json_normalize(data=response_content, record_prefix=None))
-df.columns = df.columns.str.replace("fields.", "")
-
-for column in df.columns:
-    print(column)
+response2 = get(url="http://localhost:5000/api/1.0/splitwise/expenses",
+                params=dict(limit=100))
+response_content2 = loads(response2.content)
+df = Splitwise.expenses_as_df(response_content2)

@@ -6,13 +6,10 @@
 Adjuftments Root __init__
 """
 
-from flask import Flask as _Flask
-from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy
+import logging
 
-from .airtable_connection import Airtable
-from .config import flask_config as _flask_config
+from .application import app, db
 from .splitwise_connection import Splitwise
+from .airtable_connection import Airtable
 
-app = _Flask(__name__)
-app.config.from_object(_flask_config.FlaskDefaultConfig)
-db = _SQLAlchemy(app=app)
+logger = logging.getLogger(__name__)

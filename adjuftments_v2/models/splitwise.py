@@ -10,6 +10,7 @@ class SplitwiseTable(db.Model):
     Core Splitwise Table
     """
     __tablename__ = "splitwise"
+    __table_args__ = {"schema": "adjuftments"}
 
     id = db.Column(db.Integer(), primary_key=True, unique=True, nullable=False)
     transaction_balance = db.Column(db.Numeric(10, 2), nullable=False)

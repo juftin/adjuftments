@@ -25,12 +25,18 @@ services:
             - POSTGRES_USER=${DATABASE_USER}
             - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
             - POSTGRES_DB=${DATABASE_DB}
+            - ALLOW_IP_RANGE="0.0.0.0/0"
         volumes:
             - ${DOCKER_DIRECTORY}/postgres/:/var/lib/postgresql/data
         logging:
             options:
                 max-size: 10m
                 max-file: "3"
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+            interval: 10s
+            timeout:  5s
+            retries:  5
         restart:        unless-stopped
         networks:
             adjuftments: null
@@ -51,7 +57,7 @@ services:
         ports:
             - "5000:5000"
         volumes:
-            - ${DOCKER_DIRECTORY}/adjuftments_v2:/home/adjuftments_v2/adjuftments_v2
+            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
         restart:        ${UNIVERSAL_RESTART_POLICY}
         depends_on:
             - database
@@ -80,6 +86,7 @@ services:
             adjuftments: null
         volumes:
             - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
+            - ${DOCKER_DIRECTORY}/build/wait-for-postgres.sh:/tmp/wait-for-postgres.sh
         restart:        on-failure
         depends_on:
             - database
@@ -87,8 +94,13 @@ services:
         labels:
             traefik.enable: false
         working_dir:    /home/adjuftments_v2/
-        command:        python scripts/run_adjuftments.py
+        command:
+            - /tmp/wait-for-postgres.sh
+            - /home/adjuftments_v2/scripts/run_adjuftments.py
         environment:
-            AIRTABLE_API_KEY: ${AIRTABLE_API_KEY}
-            FLASK_SETTINGS:   /home/adjuftments_v2/config/flask-sqlalchemy.py
-            DATABASE_HOST:    ${DATABASE_HOST}
+            AIRTABLE_API_KEY:  ${AIRTABLE_API_KEY}
+            FLASK_SETTINGS:    /home/adjuftments_v2/config/flask-sqlalchemy.py
+            DATABASE_HOST:     ${DATABASE_HOST}
+            DATABASE_USER:     ${DATABASE_USER}
+            DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+            DATABASE_DB:       ${DATABASE_DB}
