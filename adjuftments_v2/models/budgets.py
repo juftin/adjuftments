@@ -2,7 +2,7 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
-from adjuftments_v2 import db
+from adjuftments_v2.application import db
 
 
 class BudgetsTable(db.Model):
@@ -29,4 +29,24 @@ class BudgetsTable(db.Model):
     created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
 
     def __repr__(self):
-        return f"<Budgets: {self.month}>"
+        return f"<{self.__tablename__}: {self.month}>"
+
+    def to_dict(self) -> dict:
+        """
+        Return a flat dictionary with column mappings
+
+        Returns
+        -------
+        dict
+        """
+        return dict(
+            id=self.id,
+            month=self.month,
+            proposed_budget=self.proposed_budget,
+            actual_budget=self.actual_budget,
+            proposed_savings=self.proposed_savings,
+            amount_saved=self.amount_saved,
+            amount_spent=self.amount_spent,
+            amount_earned=self.amount_earned,
+            created_at=self.created_at
+        )

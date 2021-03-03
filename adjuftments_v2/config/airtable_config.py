@@ -41,3 +41,5 @@ class AirtableColumnMapping(object):
         Splitwise="splitwise",
         splitwiseID="splitwise_id"
     )
+
+    ExpensesReverse: Dict[str, str] = {value: key for key, value in Expenses.items()}

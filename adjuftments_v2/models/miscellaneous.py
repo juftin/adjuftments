@@ -2,7 +2,7 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
-from adjuftments_v2 import db
+from adjuftments_v2.application import db
 
 
 class MiscellaneousTable(db.Model):
@@ -18,4 +18,19 @@ class MiscellaneousTable(db.Model):
     created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
 
     def __repr__(self):
-        return f"<Miscellaneous: {self.measure}>"
+        return f"<{self.__tablename__}: {self.measure}>"
+
+    def to_dict(self) -> dict:
+        """
+        Return a flat dictionary with column mappings
+
+        Returns
+        -------
+        dict
+        """
+        return dict(
+            id=self.id,
+            measure=self.measure,
+            value=self.value,
+            created_at=self.created_at
+        )

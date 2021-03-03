@@ -2,7 +2,7 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
-from adjuftments_v2 import db
+from adjuftments_v2.application import db
 
 
 class ExpensesTable(db.Model):
@@ -17,7 +17,7 @@ class ExpensesTable(db.Model):
     category = db.Column(db.String(32), nullable=False)
     date = db.Column(db.DateTime(timezone="UTC"), nullable=False)
     imported = db.Column(db.Boolean, default=False, nullable=False)
-    imported_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
+    imported_at = db.Column(db.DateTime(timezone="UTC"), nullable=True)
     transaction = db.Column(db.String(512), nullable=False)
     uuid = db.Column(db.String(128), nullable=True)
     splitwise = db.Column(db.Boolean, default=False, nullable=False)
@@ -26,4 +26,26 @@ class ExpensesTable(db.Model):
     created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
 
     def __repr__(self):
-        return f"<Expenses {self.id}>"
+        return f"<{self.__tablename__}: {self.id}>"
+
+    def to_dict(self) -> dict:
+        """
+        Return a flat dictionary with column mappings
+
+        Returns
+        -------
+        dict
+        """
+        return dict(
+            id=self.id,
+            amount=self.amount,
+            category=self.category,
+            date=self.date,
+            imported=self.imported,
+            imported_at=self.imported_at,
+            transaction=self.transaction,
+            uuid=self.uuid,
+            splitwise=self.splitwise,
+            splitwise_id=self.splitwise_id,
+            created_at=self.created_at
+        )

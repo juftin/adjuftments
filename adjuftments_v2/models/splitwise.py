@@ -2,7 +2,7 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
-from adjuftments_v2 import db
+from adjuftments_v2.application import db
 
 
 class SplitwiseTable(db.Model):
@@ -27,4 +27,28 @@ class SplitwiseTable(db.Model):
     updated_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
 
     def __repr__(self):
-        return f"<Splitwise {self.id}>"
+        return f"<{self.__tablename__}: {self.id}>"
+
+    def to_dict(self) -> dict:
+        """
+        Return a flat dictionary with column mappings
+
+        Returns
+        -------
+        dict
+        """
+        return dict(
+            id=self.id,
+            transaction_balance=self.transaction_balance,
+            category=self.category,
+            cost=self.cost,
+            created_at=self.created_at,
+            created_by=self.created_by,
+            currency=self.currency,
+            date=self.date,
+            deleted=self.deleted,
+            deleted_at=self.deleted_at,
+            description=self.description,
+            payment=self.payment,
+            updated_at=self.updated_at
+        )

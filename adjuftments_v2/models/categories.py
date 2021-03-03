@@ -2,7 +2,7 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
-from adjuftments_v2 import db
+from adjuftments_v2.application import db
 
 
 class CategoriesTable(db.Model):
@@ -19,4 +19,20 @@ class CategoriesTable(db.Model):
     created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
 
     def __repr__(self):
-        return f"<Categories: {self.category}>"
+        return f"<{self.__tablename__}: {self.category}>"
+
+    def to_dict(self) -> dict:
+        """
+        Return a flat dictionary with column mappings
+
+        Returns
+        -------
+        dict
+        """
+        return dict(
+            id=self.id,
+            category=self.category,
+            amount_spent=self.amount_spent,
+            percent_of_total=self.percent_of_total,
+            created_at=self.created_at
+        )

@@ -31,7 +31,7 @@ class SplitwiseConfig(object):
     SPLITWISE_OAUTH_SECRET = environ["SPLITWISE_OAUTH_SECRET"]
     SPLITWISE_ACCESS_TOKEN = {"oauth_token": SPLITWISE_OAUTH_TOKEN,
                               "oauth_token_secret": SPLITWISE_OAUTH_SECRET}
-    SPLITWISE_SIGNIFICANT_OTHER = int(environ["SPLITWISE_SIGNIFICANT_OTHER"])
+    SPLITWISE_FINANCIAL_PARTNER = int(environ["SPLITWISE_FINANCIAL_PARTNER"])
 
     DTYPE_MAPPING: Dict[str, object] = {'id': int64,
                                         'transaction_balance': float64,

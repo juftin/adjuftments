@@ -5,7 +5,7 @@
 """
 Splitwise Interactions
 """
-
+from datetime import datetime
 import logging
 from random import shuffle
 from typing import List, Tuple, Union
@@ -28,7 +28,7 @@ class Splitwise(SplitwiseConn):
     __VERSION__ = 2.0
 
     def __init__(self, consumer_key: str, consumer_secret: str,
-                 access_token: str, significant_other: str = None) -> None:
+                 access_token: str, financial_partner: str = None) -> None:
         """
         Splitwise
 
@@ -37,11 +37,11 @@ class Splitwise(SplitwiseConn):
         consumer_key: str
         consumer_secret: str
         access_token: str
-        significant_other: str
+        financial_partner: str
         """
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
-        self.significant_other = significant_other
+        self.financial_partner = financial_partner
 
         super().__init__(
             consumer_key=consumer_key,
@@ -63,7 +63,7 @@ class Splitwise(SplitwiseConn):
         """
         return f"<Splitwise: {self.personal_email}>"
 
-    def _find_significant_other(self) -> Friend:
+    def _find_financial_partner(self) -> Friend:
         """
         Get a Friend by Email
 
@@ -77,9 +77,9 @@ class Splitwise(SplitwiseConn):
         """
         friend_list: List[Friend] = self.getFriends()
         for friend in friend_list:
-            if friend.id == self.significant_other:
+            if friend.id == self.financial_partner:
                 return friend
-        raise SplitwiseException(f"Friend not Found: {self.significant_other}")
+        raise SplitwiseException(f"Friend not Found: {self.financial_partner}")
 
     def get_balance(self) -> float:
         """
@@ -89,10 +89,10 @@ class Splitwise(SplitwiseConn):
         -------
         float
         """
-        significant_other = self._find_significant_other()
-        assert len(significant_other.balances) <= 1
+        financial_partner = self._find_financial_partner()
+        assert len(financial_partner.balances) <= 1
         try:
-            current_balance = significant_other.balances[0]
+            current_balance = financial_partner.balances[0]
         except IndexError:
             return 0.00
         return float(current_balance.amount)
@@ -113,26 +113,24 @@ class Splitwise(SplitwiseConn):
         # IF THERES ONLY 1 REPAYMENT AVAILABLE...
         if len(expense.repayments) == 1:
             repayment = expense.repayments[0]
-            # IF TO JUSTIN/FROM SARAH:
+            # IF TO PRIMARY/FROM FINANCIAL PARTNER:
             if repayment.toUser == self.personal_id and \
-                    repayment.fromUser == self.significant_other and \
+                    repayment.fromUser == self.financial_partner and \
                     expense.payment is False:
                 transaction_balance = float(expense.cost) - float(repayment.amount)
-            # ELIF TO JUSTIN/FROM SARAH:
+            # ELIF TO PRIMARY/FROM FINANCIAL PARTNER:
             elif repayment.fromUser == self.personal_id and \
-                    repayment.toUser == self.significant_other and \
+                    repayment.toUser == self.financial_partner and \
                     expense.payment is False:
                 transaction_balance = float(repayment.amount)
             # OTHERWISE, DISCARD IT
-            elif self.significant_other not in [user.id for user in expense.users]:
-                logger.warning(f"Expense not between Significant Other: {expense.id}")
+            elif self.financial_partner not in [user.id for user in expense.users]:
+                logger.debug(f"Expense not between Financial Partner: {expense.id}")
                 return None
             elif expense.payment is True:
                 transaction_balance = 0
         # IF THERE ARE NO REPAYMENTS
         elif len(expense.repayments) == 0:
-            logger.critical(expense.__dict__)
-            logger.critical(expense.users[0].first_name)
             assert len(expense.repayments) == 0
             assert expense.users[0].id == self.personal_id
             transaction_balance = -float(expense.cost)
@@ -282,6 +280,42 @@ class Splitwise(SplitwiseConn):
             amounts_due = tuple(two_amounts)
         return amounts_due
 
+    @classmethod
+    def _parse_splitwise_description(cls, description: str) -> str:
+        """
+        Prepare a Description for Splitwise
+
+        Parameters
+        ----------
+        description: str
+
+        Returns
+        -------
+        str
+        """
+        parsed_description = description.split(" - ")
+        if len(parsed_description) == 1:
+            parsed_description = ["Splitwise"] + parsed_description
+        parsed_description = [str(item).strip() for item in parsed_description]
+        return " - ".join(parsed_description)
+
+    def _comment_on_expense(self, expense_id: int) -> str:
+        """
+        Comment on a Splitwise Expense
+
+        Parameters
+        ----------
+        expense_id: int
+        comment: str
+
+        Returns
+        -------
+        str
+        """
+        message = f"Created via Adjuftments: {datetime.now()}"
+        comment, errors = self.createComment(expense_id=expense_id, content=message)
+        return comment, errors
+
     def create_self_paid_expense(self, amount: float, description: str) -> Expense:
         """
         Create and Submit a Splitwise Expense
@@ -299,14 +333,9 @@ class Splitwise(SplitwiseConn):
         """
         # CREATE THE NEW EXPENSE OBJECT
         new_expense = Expense()
-        # FORMAT THE DESCRIPTION
-        parsed_description = description.split(" - ")
-        if len(parsed_description) == 1:
-            parsed_description = ["Splitwise"] + parsed_description
-        parsed_description = [str(item).strip() for item in parsed_description]
-        new_expense.setDescription(desc=" - ".join(parsed_description))
+        new_expense.setDescription(desc=self._parse_splitwise_description(description=description))
         # GET AND SET AMOUNTS OWED
-        primary_user_owes, significant_other_owes = Splitwise.split_a_transaction(amount=amount)
+        primary_user_owes, financial_partner_owes = Splitwise.split_a_transaction(amount=amount)
         new_expense.setCost(cost=amount)
         # CONFIGURE PRIMARY USER
         primary_user = ExpenseUser()
@@ -314,25 +343,17 @@ class Splitwise(SplitwiseConn):
         primary_user.setPaidShare(paid_share=amount)
         primary_user.setOwedShare(owed_share=primary_user_owes)
         # CONFIGURE SECONDARY USER
-        significant_other = ExpenseUser()
-        significant_other.setId(id=self.significant_other)
-        significant_other.setPaidShare(paid_share=0.00)
-        significant_other.setOwedShare(owed_share=significant_other_owes)
+        financial_partner = ExpenseUser()
+        financial_partner.setId(id=self.financial_partner)
+        financial_partner.setPaidShare(paid_share=0.00)
+        financial_partner.setOwedShare(owed_share=financial_partner_owes)
         # ADD USERS AND REPAYMENTS TO EXPENSE
         new_expense.addUser(user=primary_user)
-        new_expense.addUser(user=significant_other)
+        new_expense.addUser(user=financial_partner)
         # SUBMIT THE EXPENSE AND GET THE RESPONSE
         expense_response, expense_errors = self.createExpense(expense=new_expense)
         assert expense_errors is None
-        return expense_response
-
-
-if __name__ == "__main__":
-    splitwiseObj = Splitwise(consumer_key=SplitwiseConfig.SPLITWISE_CONSUMER_KEY,
-                             consumer_secret=SplitwiseConfig.SPLITWISE_CONSUMER_SECRET,
-                             access_token=SplitwiseConfig.SPLITWISE_ACCESS_TOKEN,
-                             significant_other=SplitwiseConfig.SPLITWISE_SIGNIFICANT_OTHER)
-    expense_response = splitwiseObj.create_self_paid_expense(amount=13.00,
-                                                             description="Testing for Adjuftments 2 ")
-    print(expense_response.__dict__)
-    expense_dict = splitwiseObj.process_expense(expense=expense_response)
+        processed_response = self.process_expense(expense=expense_response)
+        logger.info(f"Expense Created: {processed_response['id']}")
+        self._comment_on_expense(expense_id=processed_response['id'])
+        return processed_response

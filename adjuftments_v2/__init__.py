@@ -6,10 +6,5 @@
 Adjuftments Root __init__
 """
 
-import logging
-
-from .application import app, db
-from .splitwise_connection import Splitwise
 from .airtable_connection import Airtable
-
-logger = logging.getLogger(__name__)
+from .splitwise_connection import Splitwise
