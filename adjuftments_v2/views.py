@@ -154,9 +154,18 @@ def interact_with_adjuftments_table(table: str) -> Response:
     adjuftments_table = MODEL_FINDER[table]
     # GET DATA
     if request.method == "GET":
-        response: List[Model] = adjuftments_table.query.filter_by(**request.args.to_dict())
+        request_args = request.args.to_dict()
+        # CHECK FOR LIMIT PARAMETER
+        try:
+            limit = request_args.pop("limit")
+        except KeyError:
+            limit = None
+        # GET THE DATABASE RESPONSE
+        response: List[Model] = adjuftments_table.query.filter_by(**request_args).limit(limit)
+        # HANDLE ERRORS
         if response is None:
             abort(status=404, description=f"Something went wrong fetching that data: ({table})")
+        # FLATTEN DATA AND RETURN IT
         response_array = [result.to_dict() for result in response]
         return jsonify(response_array)
     # INSERT DATA
