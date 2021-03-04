@@ -7,8 +7,10 @@ Airtable interactions
 """
 
 from datetime import datetime
+from typing import List
 
 from airtable import Airtable as AirtablePythonWrapper
+from pandas import DataFrame
 
 from adjuftments_v2.config import AirtableColumnMapping, AirtableConfig
 from adjuftments_v2.models import (BudgetsTable, CategoriesTable,
@@ -54,6 +56,55 @@ class Airtable(AirtablePythonWrapper):
         return f"<Airtable: {self.table}>"
 
     @staticmethod
+    def process_airtable_response(table: str, response: dict) -> dict:
+        """
+        Properly process an Airtable Response given a table name
+
+        Parameters
+        ----------
+        table
+        response
+
+        Returns
+        -------
+        dict
+        """
+        if table.lower() == "expenses":
+            updated_response = Airtable._process_expense_response(airtable_response=response)
+        elif table.lower() in ["dashboard", "miscellaneous"]:
+            updated_response = Airtable._process_measure_value_response(airtable_response=response)
+        elif table.lower() == "budgets":
+            updated_response = Airtable._process_budgets_response(airtable_response=response)
+        elif table.lower() == "categories":
+            updated_response = Airtable._process_categories_response(airtable_response=response)
+        else:
+            updated_response = response
+        return updated_response
+
+    @staticmethod
+    def get_column_mapping_json(table: str, airtable_dict: dict) -> dict:
+        """
+        Remap Normalized Column Names to Airtable
+
+        Parameters
+        ----------
+        table : str
+        airtable_dict: dict
+
+        Returns
+        -------
+        dict
+        """
+        if table == "expenses":
+            update_json = dict()
+            for key, value in airtable_dict.items():
+                updated_dict_key = AirtableColumnMapping.ExpensesReverse[key]
+                update_json[updated_dict_key] = value
+        else:
+            update_json = airtable_dict
+        return update_json
+
+    @staticmethod
     def get_expenses_row(expense_dict: dict) -> ExpensesTable:
         """
         Prepare a record for the Expenses Table
@@ -76,7 +127,8 @@ class Airtable(AirtablePythonWrapper):
                                     uuid=expense_dict["uuid"],
                                     splitwise=expense_dict["splitwise"],
                                     splitwise_id=expense_dict["splitwise_id"],
-                                    created_at=expense_dict["created_at"])
+                                    created_at=expense_dict["created_at"],
+                                    delete=expense_dict["delete"])
         return new_expense
 
     @staticmethod
@@ -166,30 +218,21 @@ class Airtable(AirtablePythonWrapper):
         return new_miscellaneous
 
     @staticmethod
-    def process_airtable_response(table: str, response: dict) -> dict:
+    def expenses_as_df(expense_array: List[dict]) -> DataFrame:
         """
-        Properly process an Airtable Response given a table name
+        Return Expenses as Pandas Dataframe
 
         Parameters
         ----------
-        table
-        response
+        expense_array: List[dict]
 
         Returns
         -------
-        dict
+        DataFrame
         """
-        if table.lower() == "expenses":
-            updated_response = Airtable._process_expense_response(airtable_response=response)
-        elif table.lower() in ["dashboard", "miscellaneous"]:
-            updated_response = Airtable._process_measure_value_response(airtable_response=response)
-        elif table.lower() == "budgets":
-            updated_response = Airtable._process_budgets_response(airtable_response=response)
-        elif table.lower() == "categories":
-            updated_response = Airtable._process_categories_response(airtable_response=response)
-        else:
-            updated_response = response
-        return updated_response
+        expense_df = DataFrame(expense_array,
+                               columns=AirtableColumnMapping.EXPENSES_COLUMN_ORDERING)
+        return expense_df.astype(AirtableColumnMapping.EXPENSES_DTYPE_MAPPING)
 
     @staticmethod
     def _process_expense_response(airtable_response: dict) -> dict:
@@ -220,7 +263,8 @@ class Airtable(AirtablePythonWrapper):
             uuid=airtable_response["fields"].get("UUID", None),
             splitwise=airtable_response["fields"].get("Splitwise", False),
             splitwise_id=airtable_response["fields"].get("splitwiseID", None),
-            created_at=airtable_response["createdTime"])
+            created_at=airtable_response["createdTime"],
+            delete=airtable_response["fields"].get("Delete", False))
 
     @staticmethod
     def _process_categories_response(airtable_response: dict) -> CategoriesTable:
@@ -287,26 +331,3 @@ class Airtable(AirtablePythonWrapper):
             measure=airtable_response["fields"].get("Measure"),
             value=airtable_response["fields"].get("Value"),
             created_at=airtable_response["createdTime"])
-
-    @staticmethod
-    def get_column_mapping_json(table: str, airtable_dict: dict) -> dict:
-        """
-        Remap Normalized Column Names to Airtable
-
-        Parameters
-        ----------
-        table : str
-        airtable_dict: dict
-
-        Returns
-        -------
-        dict
-        """
-        if table == "expenses":
-            update_json = dict()
-            for key, value in airtable_dict.items():
-                updated_dict_key = AirtableColumnMapping.ExpensesReverse[key]
-                update_json[updated_dict_key] = value
-        else:
-            update_json = airtable_dict
-        return update_json

@@ -7,4 +7,5 @@ Adjuftments Root __init__
 """
 
 from .airtable_connection import Airtable
+from .dashboard import Dashboard
 from .splitwise_connection import Splitwise

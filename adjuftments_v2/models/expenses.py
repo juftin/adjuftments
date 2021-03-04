@@ -24,6 +24,7 @@ class ExpensesTable(db.Model):
     splitwise_id = db.Column(db.Integer(), db.ForeignKey("adjuftments.splitwise.id"),
                              nullable=True)
     created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
+    delete = db.Column(db.Boolean, default=False, nullable=False)
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.id}>"
@@ -47,5 +48,6 @@ class ExpensesTable(db.Model):
             uuid=self.uuid,
             splitwise=self.splitwise,
             splitwise_id=self.splitwise_id,
-            created_at=self.created_at
+            created_at=self.created_at,
+            delete=self.delete
         )

@@ -5,6 +5,7 @@
 """
 Splitwise Interactions
 """
+
 from datetime import datetime
 import logging
 from random import shuffle

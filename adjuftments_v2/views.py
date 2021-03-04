@@ -19,6 +19,10 @@ logging.basicConfig(format="%(asctime)s [%(levelname)8s]: %(message)s [%(name)s]
                     level=logging.INFO)
 
 
+@app.route(rule="/favicon.ico", methods=["GET"])
+def get_favicon() -> Response:
+    return jsonify(None)
+
 @app.route(rule="/api/1.0/airtable/<table>", methods=["GET", "POST"])
 def interact_with_airtable_table(table: str) -> Response:
     """
@@ -69,7 +73,7 @@ def interact_with_airtable_record(table: str, record_id: str) -> Response:
         flattened_row = airtable_object.process_airtable_response(table=table, response=record)
         return jsonify(flattened_row)
     # UPDATE DATA
-    if request.method == "POST":
+    elif request.method == "POST":
         update_json = airtable_object.get_column_mapping_json(table=table,
                                                               airtable_dict=request.get_json())
         record_response = airtable_object.update(record_id=record_id, fields=update_json,
@@ -78,7 +82,7 @@ def interact_with_airtable_record(table: str, record_id: str) -> Response:
                                                                         response=record_response)
         return jsonify(normalized_response)
     # DELETE DATA
-    if request.method == "DELETE":
+    elif request.method == "DELETE":
         record_response = airtable_object.delete(record_id=record_id)
         return jsonify(record_response)
 

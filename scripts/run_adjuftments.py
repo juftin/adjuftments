@@ -5,14 +5,16 @@
 """
 Example Run All Script
 """
+
 from json import loads
 import logging
 
 from requests import get, post
 
+# filterwarnings("error")
+from adjuftments_v2 import Airtable, Dashboard
 from adjuftments_v2.application import db
 
-# filterwarnings("error")
 logger = logging.getLogger(__name__)
 
 
@@ -116,5 +118,17 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s [%(levelname)8s]: %(message)s [%(name)s]",
                         handlers=[logging.StreamHandler()],
                         level=logging.INFO)
-    prepare_database(drop=True)
-    clean_start(run=True)
+    prepare_database(drop=False)
+    clean_start(run=False)
+    logger.info("Retrieving Data")
+    airtable_response = get(url="http://webserver:5000/api/1.0/adjuftments/expenses")
+    logger.info("Data retrieved")
+    df = Airtable.expenses_as_df(expense_array=loads(airtable_response.content))
+    logger.info("Generating Dashboard")
+    dashboard_manifest = Dashboard.run_dashboard(dataframe=df)
+    logger.info(f"{len(dashboard_manifest)} records to update in Airtable")
+    for manifest_record in dashboard_manifest:
+        url = f"http://webserver:5000/api/1.0/airtable/dashboard/{manifest_record['id']}"
+        response = post(url=url,
+                        json={"Value": manifest_record["value"]})
+    logger.info("Dashboard Complete")

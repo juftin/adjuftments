@@ -8,3 +8,4 @@ Adjuftments Config __init__
 
 from .airtable_config import AirtableColumnMapping, AirtableConfig
 from .splitwise_config import SplitwiseConfig
+from .dashboard_config import DashboardConfig
