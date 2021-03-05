@@ -49,3 +49,23 @@ class FlaskTestingConfig(FlaskDefaultConfig):
     Default Config + PostgreSQL Database Connection
     """
     SQLALCHEMY_DATABASE_URI = f"sqlite:////{config_dir}/sqlite.db"
+
+
+class APIEndpoints(object):
+    """
+    API Endpoint Configuration
+    """
+    # api/1.0/splitwise/expenses
+    BASE_PATH: str = "api"
+    API_VERSION: str = "1.0"
+
+    SPLITWISE_BASE: str = f"/{BASE_PATH}/{API_VERSION}/splitwise"
+    AIRTABLE_BASE: str = f"/{BASE_PATH}/{API_VERSION}/airtable"
+    ADJUFTMENTS_BASE: str = f"/{BASE_PATH}/{API_VERSION}/adjuftments"
+
+    AIRTABLE_BUDGETS: str = f"{AIRTABLE_BASE}/budgets"
+    AIRTABLE_CATEGORIES: str = f"{AIRTABLE_BASE}/categories"
+    AIRTABLE_DASHBOARD: str = f"{AIRTABLE_BASE}/dashboard"
+    AIRTABLE_EXPENSE: str = f"{AIRTABLE_BASE}/expenses"
+    AIRTABLE_MISCELLANEOUS: str = f"{AIRTABLE_BASE}/budgets"
+    SPLITWISE_EXPENSES: str = f"{SPLITWISE_BASE}/expenses"

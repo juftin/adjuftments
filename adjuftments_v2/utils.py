@@ -9,6 +9,7 @@ Generic Utilities for Adjuftments
 from datetime import date, timedelta
 from datetime import datetime
 import decimal
+from json import dumps, loads
 
 from flask.json import JSONEncoder
 
@@ -37,3 +38,20 @@ class AdjuftmentsEncoder(JSONEncoder):
         else:
             return list(iterable)
         return JSONEncoder.default(self, obj)
+
+    @staticmethod
+    def parse_object(obj) -> object:
+        """
+        Parse and object
+
+        Parameters
+        ----------
+        obj: obj
+
+        Returns
+        -------
+        object
+        """
+        cleaned_response = dumps(obj, cls=AdjuftmentsEncoder)
+        formatted_response = loads(cleaned_response)
+        return formatted_response

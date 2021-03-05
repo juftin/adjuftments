@@ -10,7 +10,7 @@ from flask_sqlalchemy import Model
 
 from adjuftments_v2 import Airtable, Splitwise
 from adjuftments_v2.application import app, db
-from adjuftments_v2.config import AirtableConfig, SplitwiseConfig
+from adjuftments_v2.config import AirtableConfig, APIEndpoints, SplitwiseConfig
 from adjuftments_v2.models import MODEL_FINDER
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,8 @@ logging.basicConfig(format="%(asctime)s [%(levelname)8s]: %(message)s [%(name)s]
 def get_favicon() -> Response:
     return jsonify(None)
 
-@app.route(rule="/api/1.0/airtable/<table>", methods=["GET", "POST"])
+
+@app.route(rule=f"{APIEndpoints.AIRTABLE_BASE}/<table>", methods=["GET", "POST"])
 def interact_with_airtable_table(table: str) -> Response:
     """
     Interact with an Airtable table depending on the HTTP Request type.
@@ -53,7 +54,8 @@ def interact_with_airtable_table(table: str) -> Response:
         return jsonify(normalized_response)
 
 
-@app.route(rule="/api/1.0/airtable/<table>/<record_id>", methods=["GET", "POST", "DELETE"])
+@app.route(rule=f"{APIEndpoints.AIRTABLE_BASE}/<table>/<record_id>",
+           methods=["GET", "POST", "DELETE"])
 def interact_with_airtable_record(table: str, record_id: str) -> Response:
     """
 
@@ -76,7 +78,8 @@ def interact_with_airtable_record(table: str, record_id: str) -> Response:
     elif request.method == "POST":
         update_json = airtable_object.get_column_mapping_json(table=table,
                                                               airtable_dict=request.get_json())
-        record_response = airtable_object.update(record_id=record_id, fields=update_json,
+        record_response = airtable_object.update(record_id=record_id,
+                                                 fields=update_json,
                                                  typecast=True)
         normalized_response = airtable_object.process_airtable_response(table=table,
                                                                         response=record_response)
@@ -87,7 +90,7 @@ def interact_with_airtable_record(table: str, record_id: str) -> Response:
         return jsonify(record_response)
 
 
-@app.route(rule="/api/1.0/splitwise/expenses", methods=["GET", "POST"])
+@app.route(rule=APIEndpoints.SPLITWISE_EXPENSES, methods=["GET", "POST"])
 def interact_with_splitwise_expenses() -> Response:
     """
     Interact with an Splitwise table depending on the HTTP Request type.
@@ -114,7 +117,7 @@ def interact_with_splitwise_expenses() -> Response:
         return jsonify(response)
 
 
-@app.route(rule="/api/1.0/splitwise/expenses/<record_id>", methods=["GET", "DELETE"])
+@app.route(rule=f"{APIEndpoints.SPLITWISE_EXPENSES}/<record_id>", methods=["GET", "DELETE"])
 def interact_with_splitwise_record(record_id: int) -> Response:
     """
     Interact with an Splitwise table depending on the HTTP Request type.
@@ -131,7 +134,6 @@ def interact_with_splitwise_record(record_id: int) -> Response:
                              financial_partner=SplitwiseConfig.SPLITWISE_FINANCIAL_PARTNER)
     # GET DATA
     if request.method == "GET":
-        # OR({Imported}=FALSE(), {Delete}=True())
         record = splitwiseObj.getExpense(id=record_id)
         formatted_record = splitwiseObj.process_expense(expense=record)
         return jsonify(formatted_record)
@@ -144,7 +146,7 @@ def interact_with_splitwise_record(record_id: int) -> Response:
             return jsonify(delete_success)
 
 
-@app.route(rule="/api/1.0/adjuftments/<table>", methods=["GET", "POST"])
+@app.route(rule=f"{APIEndpoints.ADJUFTMENTS_BASE}/<table>", methods=["GET", "POST"])
 def interact_with_adjuftments_table(table: str) -> Response:
     """
     Interact with an SAdjuftments SQL Table
@@ -182,7 +184,7 @@ def interact_with_adjuftments_table(table: str) -> Response:
         return jsonify(new_record.to_dict())
 
 
-@app.route(rule="/api/1.0/adjuftments/<table>/<key>", methods=["GET", "POST", "DELETE"])
+@app.route(rule=f"{APIEndpoints.ADJUFTMENTS_BASE}/<table>/<key>", methods=["GET", "POST", "DELETE"])
 def interact_with_adjuftments_record(table: str, key: Union[str, int]) -> Response:
     """
     Retrieve a Single Record by its primary key

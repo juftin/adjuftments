@@ -3,7 +3,7 @@
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
 """
-Dasboard Formatting
+Dashboard Formatting
 """
 
 from calendar import monthrange

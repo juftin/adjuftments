@@ -281,8 +281,8 @@ class Splitwise(SplitwiseConn):
             amounts_due = tuple(two_amounts)
         return amounts_due
 
-    @classmethod
-    def _parse_splitwise_description(cls, description: str) -> str:
+    @staticmethod
+    def parse_splitwise_description(description: str) -> str:
         """
         Prepare a Description for Splitwise
 
@@ -334,7 +334,7 @@ class Splitwise(SplitwiseConn):
         """
         # CREATE THE NEW EXPENSE OBJECT
         new_expense = Expense()
-        new_expense.setDescription(desc=self._parse_splitwise_description(description=description))
+        new_expense.setDescription(desc=self.parse_splitwise_description(description=description))
         # GET AND SET AMOUNTS OWED
         primary_user_owes, financial_partner_owes = Splitwise.split_a_transaction(amount=amount)
         new_expense.setCost(cost=amount)
