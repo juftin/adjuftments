@@ -16,6 +16,7 @@ from .dashboard import DashboardTable
 from .expenses import ExpensesTable
 from .miscellaneous import MiscellaneousTable
 from .splitwise import SplitwiseTable
+from .users import UsersTable
 
 ALL_TABLES: List[Model] = [
     BudgetsTable,
@@ -23,7 +24,8 @@ ALL_TABLES: List[Model] = [
     DashboardTable,
     ExpensesTable,
     MiscellaneousTable,
-    SplitwiseTable
+    SplitwiseTable,
+    UsersTable
 ]
 
 MODEL_FINDER: Dict[str, Model] = {
@@ -32,5 +34,6 @@ MODEL_FINDER: Dict[str, Model] = {
     "dashboard": DashboardTable,
     "expenses": ExpensesTable,
     "miscellaneous": MiscellaneousTable,
-    "splitwise": SplitwiseTable
+    "splitwise": SplitwiseTable,
+    "users": UsersTable
 }

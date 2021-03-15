@@ -13,7 +13,7 @@ class DashboardTable(db.Model):
     __table_args__ = {"schema": "adjuftments"}
 
     id = db.Column(db.String(32), primary_key=True, unique=True, nullable=False)
-    measure = db.Column(db.String(32), unique=True, nullable=False)
+    measure = db.Column(db.String(32), unique=True, nullable=False, index=True)
     value = db.Column(db.String(64), nullable=True)
     created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
 

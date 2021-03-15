@@ -13,7 +13,7 @@ class BudgetsTable(db.Model):
     __table_args__ = {"schema": "adjuftments"}
 
     id = db.Column(db.String(32), primary_key=True, unique=True, nullable=False)
-    month = db.Column(db.String(32), unique=True, nullable=False)
+    month = db.Column(db.String(32), unique=True, nullable=False, index=True)
     proposed_budget = db.Column(db.Numeric(10, 2),
                                 default=0.00, nullable=False)
     actual_budget = db.Column(db.Numeric(10, 2),

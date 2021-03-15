@@ -12,7 +12,7 @@ class SplitwiseTable(db.Model):
     __tablename__ = "splitwise"
     __table_args__ = {"schema": "adjuftments"}
 
-    id = db.Column(db.Integer(), primary_key=True, unique=True, nullable=False)
+    id = db.Column(db.Integer(), primary_key=True, unique=True, nullable=False, index=True)
     transaction_balance = db.Column(db.Numeric(10, 2), nullable=False)
     category = db.Column(db.String(32), nullable=False)
     cost = db.Column(db.Numeric(10, 2), nullable=False)

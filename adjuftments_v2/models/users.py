@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+
+# Author::    Justin Flannery  (mailto:juftin@juftin.com)
+
+from flask_login import UserMixin
+
+from adjuftments_v2.application import db
+
+
+class UsersTable(UserMixin, db.Model):
+    """
+    Flask Login User Object
+    """
+    __tablename__ = "users"
+    __table_args__ = {"schema": "adjuftments"}
+
+    id = db.Column(db.Integer(), primary_key=True, unique=True, nullable=False, autoincrement=True)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    api_token = db.Column(db.String(128), nullable=True, index=True)
+
+    def set_api_token(self, api_token: str):
+        """
+        Create a hashed password/API token field
+
+        Parameters
+        ----------
+        api_token: str
+
+        Returns
+        -------
+        str
+        """
+        self.api_token = api_token
+        return self.api_token
+
+    def __repr__(self):
+        return f"<{self.__tablename__}: {self.id}>"
+
+    def to_dict(self) -> dict:
+        """
+        Return a flat dictionary with column mappings
+
+        Returns
+        -------
+        dict
+        """
+        return dict(
+            id=self.id,
+            username=self.username,
+            api_token=self.api_token
+        )

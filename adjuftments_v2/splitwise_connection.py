@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class Splitwise(SplitwiseConn):
     """
-    Python Class for interacting with Splitwise
+    Python Extension Class for interacting with Splitwise
     """
     __VERSION__ = 2.0
 
@@ -358,3 +358,7 @@ class Splitwise(SplitwiseConn):
         logger.info(f"Expense Created: {processed_response['id']}")
         self._comment_on_expense(expense_id=processed_response['id'])
         return processed_response
+
+# TODO: SplitwiseConn makes my life easy here, but it might
+#   be useful and informative to build a wrapper around Splitwise's
+#   External API for the few endpoints needed

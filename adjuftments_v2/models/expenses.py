@@ -12,7 +12,7 @@ class ExpensesTable(db.Model):
     __tablename__ = "expenses"
     __table_args__ = {"schema": "adjuftments"}
 
-    id = db.Column(db.String(32), primary_key=True, unique=True, nullable=False)
+    id = db.Column(db.String(32), primary_key=True, unique=True, nullable=False, index=True)
     amount = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
     category = db.Column(db.String(32), nullable=False)
     date = db.Column(db.DateTime(timezone="UTC"), nullable=False)

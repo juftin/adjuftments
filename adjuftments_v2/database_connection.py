@@ -7,7 +7,6 @@ Database Interactions
 """
 
 from datetime import datetime
-from json import dumps, loads
 import logging
 from typing import List
 
@@ -49,8 +48,8 @@ def query_table(table: str, query_filter: dict = None,
         **query_order).limit(limit)
     compiled_response = list()
     for record in database_response:
-        cleaned_response = dumps(record.to_dict(), cls=AdjuftmentsEncoder)
-        compiled_response.append(loads(cleaned_response))
+        cleaned_response = AdjuftmentsEncoder.parse_object(obj=record.to_dict())
+        compiled_response.append(cleaned_response)
     return compiled_response
 
 
@@ -81,8 +80,7 @@ def return_single_row(table: str, query_filter: dict = None,
         query_order = dict()
     response = database_table.query.filter_by(**query_filter).order_by(
         **query_order).first()
-    cleaned_response = dumps(response.to_dict(), cls=AdjuftmentsEncoder)
-    formatted_response = loads(cleaned_response)
+    formatted_response = AdjuftmentsEncoder.parse_object(obj=response.to_dict())
     if key is not None:
         return formatted_response[key]
     else:
@@ -126,6 +124,5 @@ def get_last_expense() -> dict:
     """
     response = ExpensesTable.query.order_by(ExpensesTable.date.desc(),
                                             ExpensesTable.imported_at.desc()).first()
-    cleaned_response = dumps(response.to_dict(), cls=AdjuftmentsEncoder)
-    formatted_response = loads(cleaned_response)
+    formatted_response = AdjuftmentsEncoder.parse_object(obj=response.to_dict())
     return formatted_response

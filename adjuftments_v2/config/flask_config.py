@@ -55,13 +55,15 @@ class APIEndpoints(object):
     """
     API Endpoint Configuration
     """
-    # api/1.0/splitwise/expenses
     BASE_PATH: str = "api"
     API_VERSION: str = "1.0"
+    URL_BASE: str = f"/{BASE_PATH}/{API_VERSION}"
 
-    SPLITWISE_BASE: str = f"/{BASE_PATH}/{API_VERSION}/splitwise"
-    AIRTABLE_BASE: str = f"/{BASE_PATH}/{API_VERSION}/airtable"
-    ADJUFTMENTS_BASE: str = f"/{BASE_PATH}/{API_VERSION}/adjuftments"
+    SPLITWISE_BASE: str = f"{URL_BASE}/splitwise"
+    AIRTABLE_BASE: str = f"{URL_BASE}/airtable"
+    ADJUFTMENTS_BASE: str = f"{URL_BASE}/adjuftments"
+    FINANCE_BASE: str = f"{URL_BASE}/finance"
+    ADMIN_BASE: str = f"{URL_BASE}/admin"
 
     AIRTABLE_BUDGETS: str = f"{AIRTABLE_BASE}/budgets"
     AIRTABLE_CATEGORIES: str = f"{AIRTABLE_BASE}/categories"
@@ -69,3 +71,6 @@ class APIEndpoints(object):
     AIRTABLE_EXPENSE: str = f"{AIRTABLE_BASE}/expenses"
     AIRTABLE_MISCELLANEOUS: str = f"{AIRTABLE_BASE}/budgets"
     SPLITWISE_EXPENSES: str = f"{SPLITWISE_BASE}/expenses"
+    SPLITWISE_BALANCE: str = f"{SPLITWISE_BASE}/balance"
+    STOCK_TICKER_API: str = f"{FINANCE_BASE}/stocks"
+    ADMIN_USERS: str = f"{ADMIN_BASE}/users"
