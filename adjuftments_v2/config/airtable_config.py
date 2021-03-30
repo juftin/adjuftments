@@ -7,18 +7,16 @@ AirTable Configuration.
 """
 
 import logging
-from os import environ, path
-from pathlib import Path
+from os import environ, getenv
 from typing import Dict, List
 
 from dotenv import load_dotenv
 from numpy import bool_, datetime64, float64, object_
 
-logger = logging.getLogger(__name__)
+from .file_config import DOT_ENV_FILE_PATH
 
-config_dir = Path(path.abspath(__file__)).parent
-env_file = path.join(config_dir.parent.parent, '.env')
-load_dotenv(env_file, override=True)
+load_dotenv(DOT_ENV_FILE_PATH, override=True)
+logger = logging.getLogger(__name__)
 
 
 class AirtableConfig(object):
@@ -27,6 +25,14 @@ class AirtableConfig(object):
     """
     AIRTABLE_API_KEY: str = environ["AIRTABLE_API_KEY"]
     AIRTABLE_BASE: str = environ["AIRTABLE_BASE"]
+    _2020_AIRTABLE_BASE: str = (2020, getenv("AIRTABLE_BASE_2020", None))
+    _2019_AIRTABLE_BASE: str = (2019, getenv("AIRTABLE_BASE_2019", None))
+    _2018_AIRTABLE_BASE: str = (2018, getenv("AIRTABLE_BASE_2018", None))
+    _HISTORIC_BASES_PREP: List[str] = [_2018_AIRTABLE_BASE,
+                                       _2019_AIRTABLE_BASE,
+                                       _2020_AIRTABLE_BASE]
+    HISTORIC_BASES: Dict[str, str] = {str(year): base for (year, base) in _HISTORIC_BASES_PREP if
+                                      base is not None}
 
 
 class AirtableColumnMapping(object):
@@ -45,7 +51,8 @@ class AirtableColumnMapping(object):
         Splitwise="splitwise",
         splitwiseID="splitwise_id",
         createdTime="created_at",
-        Delete="delete"
+        Delete="delete",
+        ModifiedAt="updated_at"
     )
 
     ExpensesReverse: Dict[str, str] = {value: key for key, value in Expenses.items()}
@@ -62,7 +69,8 @@ class AirtableColumnMapping(object):
         splitwise=bool_,
         splitwise_id="Int64",
         created_at=datetime64,
-        delete=bool_
+        delete=bool_,
+        updated_at="datetime64[ns]",
     )
 
     EXPENSES_COLUMN_ORDERING: List[str] = [key for key, value in EXPENSES_DTYPE_MAPPING.items()]

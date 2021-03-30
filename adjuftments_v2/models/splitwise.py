@@ -2,6 +2,8 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
+from sqlalchemy import func
+
 from adjuftments_v2.application import db
 
 

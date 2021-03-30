@@ -7,17 +7,15 @@ Splitwise Configuration.
 """
 
 import logging
-from os import environ, path
-from pathlib import Path
+from os import environ
 from typing import Dict
 
 from dotenv import load_dotenv
 from numpy import bool_, datetime64, float64, int64, object_
 
-config_dir = Path(path.abspath(__file__)).parent
-env_file = path.join(config_dir.parent.parent, '.env')
-load_dotenv(env_file, override=True)
+from .file_config import DOT_ENV_FILE_PATH
 
+load_dotenv(DOT_ENV_FILE_PATH, override=True)
 logger = logging.getLogger(__name__)
 
 

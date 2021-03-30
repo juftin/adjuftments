@@ -5,6 +5,7 @@
 """
 Dashboard Configuration.
 """
+
 from typing import Dict
 
 
@@ -22,7 +23,7 @@ class DashboardConfig(object):
         "monthly_savings": "Monthly Savings",
         "total_savings": "Savings Balance",
         "net_worth": "Net Worth",
-        # "splitwise_balance": "Splitwise Balance",
+        "splitwise_balance": "Splitwise Balance",
         "total_reimbursement": "Reimbursement",
         "current_budget": "Current Budget",
         "monthly_income": "Monthly Income",
@@ -52,7 +53,7 @@ class DashboardConfig(object):
         "monthly_savings": "money",
         "total_savings": "money",
         "net_worth": "money",
-        # "splitwise_balance": "money",
+        "splitwise_balance": "money",
         "total_reimbursement": "money",
         "current_budget": "money",
         "monthly_income": "money",

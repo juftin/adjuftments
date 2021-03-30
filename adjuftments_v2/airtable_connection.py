@@ -77,6 +77,8 @@ class Airtable(AirtablePythonWrapper):
             updated_response = Airtable._process_budgets_response(airtable_response=response)
         elif table.lower() == "categories":
             updated_response = Airtable._process_categories_response(airtable_response=response)
+        elif table.lower() == "stocks":
+            updated_response = Airtable._process_stocks_response(airtable_response=response)
         else:
             updated_response = response
         return updated_response
@@ -99,7 +101,9 @@ class Airtable(AirtablePythonWrapper):
             update_json = dict()
             for key, value in airtable_dict.items():
                 updated_dict_key = AirtableColumnMapping.ExpensesReverse[key]
-                update_json[updated_dict_key] = value
+                # DO NOT UPDATE COMPUTED VALUES
+                if key != "updated_at":
+                    update_json[updated_dict_key] = value
         else:
             update_json = airtable_dict
         return update_json
@@ -218,7 +222,7 @@ class Airtable(AirtablePythonWrapper):
         return new_miscellaneous
 
     @staticmethod
-    def expenses_as_df(expense_array: List[dict]) -> DataFrame:
+    def expenses_as_df(expense_array: object) -> object:
         """
         Return Expenses as Pandas Dataframe
 
@@ -264,10 +268,11 @@ class Airtable(AirtablePythonWrapper):
             splitwise=airtable_response["fields"].get("Splitwise", False),
             splitwise_id=airtable_response["fields"].get("splitwiseID", None),
             created_at=airtable_response["createdTime"],
-            delete=airtable_response["fields"].get("Delete", False))
+            delete=airtable_response["fields"].get("Delete", False),
+            updated_at=airtable_response["fields"].get("ModifiedAt", None))
 
     @staticmethod
-    def _process_categories_response(airtable_response: dict) -> CategoriesTable:
+    def _process_categories_response(airtable_response: dict) -> dict:
         """
         Prepare a record for the Categories table
 
@@ -286,6 +291,30 @@ class Airtable(AirtablePythonWrapper):
             percent_of_total=airtable_response["fields"]["% of Total"],
             created_at=airtable_response["createdTime"])
         return new_category
+
+    @staticmethod
+    def _process_stocks_response(airtable_response: dict) -> dict:
+        """
+        Prepare a record for the Stocks table
+
+        Parameters
+        ----------
+        airtable_response: dict
+
+        Returns
+        -------
+        CategoriesTable
+        """
+        stock_response = dict(
+            id=airtable_response["id"],
+            ticker=airtable_response["fields"].get("Ticker", None),
+            stock_price=airtable_response["fields"].get("Stock Price", None),
+            value=airtable_response["fields"].get("Value", None),
+            holdings=airtable_response["fields"].get("Holdings", None),
+            description=airtable_response["fields"].get("Description", None),
+            cost_basis=airtable_response["fields"].get("Cost Basis", None),
+            created_at=airtable_response["createdTime"])
+        return stock_response
 
     @staticmethod
     def _process_budgets_response(airtable_response: dict) -> BudgetsTable:

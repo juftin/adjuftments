@@ -2,6 +2,8 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
+from sqlalchemy import func
+
 from adjuftments_v2.application import db
 
 
@@ -27,6 +29,9 @@ class BudgetsTable(db.Model):
     amount_earned = db.Column(db.Numeric(10, 2),
                               default=0.00, nullable=False)
     created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
+    updated_at = db.Column(db.DateTime(timezone="UTC"), nullable=False,
+                           server_default=func.now(timezone="utc"),
+                           onupdate=func.now(timezone="utc"))
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.month}>"
@@ -48,5 +53,6 @@ class BudgetsTable(db.Model):
             amount_saved=self.amount_saved,
             amount_spent=self.amount_spent,
             amount_earned=self.amount_earned,
-            created_at=self.created_at
+            created_at=self.created_at,
+            updated_at=self.updated_at
         )

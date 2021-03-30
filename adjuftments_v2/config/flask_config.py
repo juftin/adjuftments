@@ -6,15 +6,18 @@
 Flask configuration.
 """
 
-from os import environ, path
+import logging
+from os import environ, getenv
+from os.path import abspath
 from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy.engine.url import URL
 
-config_dir = Path(path.abspath(__file__)).parent
-env_file = path.join(config_dir.parent.parent, '.env')
-load_dotenv(env_file, override=True)
+from .file_config import DOT_ENV_FILE_PATH
+
+load_dotenv(DOT_ENV_FILE_PATH, override=True)
+logger = logging.getLogger(__name__)
 
 
 class FlaskDefaultConfig(object):
@@ -28,19 +31,26 @@ class FlaskDefaultConfig(object):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    _drivername = "postgresql"
-    _username = environ["DATABASE_USER"]
-    _password = environ["DATABASE_PASSWORD"]
-    _host = environ["DATABASE_HOST"]
-    _port = 5432
-    _database = environ["DATABASE_DB"]
+    DRIVERNAME = "postgresql"
+    DATABASE_USERNAME = environ["DATABASE_USER"]
+    DATABASE_PASSWORD = environ["DATABASE_PASSWORD"]
 
-    SQLALCHEMY_DATABASE_URI = URL(drivername=_drivername,
-                                  username=_username,
-                                  password=_password,
-                                  host=_host,
-                                  port=_port,
-                                  database=_database)
+    if getenv("DOCKER_ENVIRONMENT") is None:
+        DATABASE_HOST = "localhost"
+        API_ENDPOINT = "localhost"
+    else:
+        DATABASE_HOST = environ["DATABASE_HOST"]
+        API_ENDPOINT = "webserver"
+    DATABASE_PORT = 5432
+    DATABASE_NAME = environ["DATABASE_DB"]
+
+    SQLALCHEMY_DATABASE_URI = URL(drivername=DRIVERNAME,
+                                  username=DATABASE_USERNAME,
+                                  password=DATABASE_PASSWORD,
+                                  host=DATABASE_HOST,
+                                  port=DATABASE_PORT,
+                                  database=DATABASE_NAME)
+    API_TOKEN = environ["ADJUFTMENTS_API_TOKEN"]
     SQLALCHEMY_ECHO = False
 
 
@@ -48,6 +58,7 @@ class FlaskTestingConfig(FlaskDefaultConfig):
     """
     Default Config + PostgreSQL Database Connection
     """
+    config_dir = Path(abspath(__file__)).parent
     SQLALCHEMY_DATABASE_URI = f"sqlite:////{config_dir}/sqlite.db"
 
 
@@ -55,6 +66,7 @@ class APIEndpoints(object):
     """
     API Endpoint Configuration
     """
+
     BASE_PATH: str = "api"
     API_VERSION: str = "1.0"
     URL_BASE: str = f"/{BASE_PATH}/{API_VERSION}"
@@ -72,5 +84,10 @@ class APIEndpoints(object):
     AIRTABLE_MISCELLANEOUS: str = f"{AIRTABLE_BASE}/budgets"
     SPLITWISE_EXPENSES: str = f"{SPLITWISE_BASE}/expenses"
     SPLITWISE_BALANCE: str = f"{SPLITWISE_BASE}/balance"
+    SPLITWISE_UPDATED_AT: str = f"{SPLITWISE_BASE}/timestamp"
     STOCK_TICKER_API: str = f"{FINANCE_BASE}/stocks"
+    DASHBOARD_GENERATOR: str = f"{FINANCE_BASE}/dashboard"
+    ADMIN_DATABASE_BUILD: str = f"{ADMIN_BASE}/build"
     ADMIN_USERS: str = f"{ADMIN_BASE}/users"
+    EXPENSE_CATEGORIES = f"{FINANCE_BASE}/categories"
+    IMAGES_ENDPOINT = f"{FINANCE_BASE}/images"

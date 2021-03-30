@@ -26,6 +26,8 @@ services:
             - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
             - POSTGRES_DB=${DATABASE_DB}
             - ALLOW_IP_RANGE="0.0.0.0/0"
+            - TZ=UTC
+            - PG_TZ=UTC
         volumes:
             - ${DOCKER_DIRECTORY}/postgres/:/var/lib/postgresql/data
         logging:
@@ -64,12 +66,9 @@ services:
         labels:
             traefik.enable: false
         environment:
-            FLASK_APP:         "/home/adjuftments_v2/adjuftments_v2/views.py"
-            FLASK_ENV:         "development"
-            AIRTABLE_API_KEY:  ${AIRTABLE_API_KEY}
-            DATABASE_USER:     ${DATABASE_USER}
-            DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-            DATABASE_DB:       ${DATABASE_DB}
+            FLASK_APP:          "/home/adjuftments_v2/adjuftments_v2/views.py"
+            FLASK_ENV:          "development"
+            DOCKER_ENVIRONMENT: "True"
         working_dir:    /home/adjuftments_v2/adjuftments_v2
         command:        flask run --host=0.0.0.0
 
@@ -86,7 +85,6 @@ services:
             adjuftments: null
         volumes:
             - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
-            - ${DOCKER_DIRECTORY}/build/wait-for-postgres.sh:/tmp/wait-for-postgres.sh
         restart:        on-failure
         depends_on:
             - database
@@ -95,13 +93,36 @@ services:
             traefik.enable: false
         working_dir:    /home/adjuftments_v2/
         command:
-            - /tmp/wait-for-postgres.sh
+            - /home/adjuftments_v2/build/wait-for-postgres.sh
             - /home/adjuftments_v2/scripts/run_adjuftments.py
         environment:
-            AIRTABLE_API_KEY:  ${AIRTABLE_API_KEY}
-            FLASK_SETTINGS:    /home/adjuftments_v2/config/flask-sqlalchemy.py
-            DATABASE_HOST:     ${DATABASE_HOST}
-            DATABASE_USER:     ${DATABASE_USER}
-            DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-            DATABASE_DB:       ${DATABASE_DB}
-            TZ:                ${TZ}
+            TZ:                 ${TZ}
+            DOCKER_ENVIRONMENT: "True"
+
+    ####################################
+    # ADJUFTMENTS JOB SCHEDULER
+    ####################################
+
+    job_scheduler:
+        container_name: job_scheduler
+        build:
+            context:    ${DOCKER_DIRECTORY}/build/
+            dockerfile: Dockerfile
+        networks:
+            adjuftments: null
+        volumes:
+            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
+        restart:        on-failure
+        depends_on:
+            - database
+            - webserver
+            - adjuftments
+        labels:
+            traefik.enable: false
+        working_dir:    /home/adjuftments_v2/
+        command:
+            - /home/adjuftments_v2/build/wait-for-postgres.sh
+            - /home/adjuftments_v2/scripts/run_scheduler.py
+        environment:
+            TZ:                 ${TZ}
+            DOCKER_ENVIRONMENT: "True"

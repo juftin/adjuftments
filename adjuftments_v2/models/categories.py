@@ -2,6 +2,8 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
+from sqlalchemy import func
+
 from adjuftments_v2.application import db
 
 
@@ -17,6 +19,9 @@ class CategoriesTable(db.Model):
     amount_spent = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
     percent_of_total = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
     created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
+    updated_at = db.Column(db.DateTime(timezone="UTC"), nullable=False,
+                           server_default=func.now(timezone="utc"),
+                           onupdate=func.now(timezone="utc"))
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.category}>"
@@ -34,5 +39,6 @@ class CategoriesTable(db.Model):
             category=self.category,
             amount_spent=self.amount_spent,
             percent_of_total=self.percent_of_total,
-            created_at=self.created_at
+            created_at=self.created_at,
+            updated_at=self.updated_at
         )

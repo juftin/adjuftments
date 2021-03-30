@@ -7,11 +7,11 @@ from sqlalchemy import func
 from adjuftments_v2.application import db
 
 
-class ExpensesTable(db.Model):
+class HistoricExpensesTable(db.Model):
     """
-    Core Expenses Table
+    Extension of the Expenses Table for storing historic data
     """
-    __tablename__ = "expenses"
+    __tablename__ = "historic_expenses"
     __table_args__ = {"schema": "adjuftments"}
 
     id = db.Column(db.String(32), primary_key=True, unique=True, nullable=False, index=True)
@@ -23,11 +23,12 @@ class ExpensesTable(db.Model):
     transaction = db.Column(db.String(512), nullable=False)
     uuid = db.Column(db.String(128), nullable=True)
     splitwise = db.Column(db.Boolean, default=False, nullable=False)
-    splitwise_id = db.Column(db.Integer(), db.ForeignKey("adjuftments.splitwise.id"),
-                             nullable=True)
+    splitwise_id = db.Column(db.Integer(), nullable=True)
     created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
     delete = db.Column(db.Boolean, default=False, nullable=False)
-    updated_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
+    updated_at = db.Column(db.DateTime(timezone="UTC"), nullable=False,
+                           server_default=func.now(timezone="utc"),
+                           onupdate=func.now(timezone="utc"))
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.id}>"

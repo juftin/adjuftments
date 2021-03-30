@@ -9,15 +9,17 @@ Dashboard Formatting
 from calendar import monthrange
 from datetime import datetime
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from dateutil.relativedelta import relativedelta
+from numpy import where
 from pandas import DataFrame, Series
 
 from adjuftments_v2 import database_connection
 from adjuftments_v2.application import db
 from adjuftments_v2.config import DashboardConfig
 from adjuftments_v2.models import DashboardTable
+from adjuftments_v2.utils import AdjuftmentsEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -42,57 +44,6 @@ class Dashboard(object):
         total_seconds_passed = seconds_passed_today + passed_seconds_in_month
         percentage_though_month = total_seconds_passed / total_seconds_in_month
         return percentage_though_month
-
-    @classmethod
-    def _format_float(cls, amount: float, float_format: str = "money") -> str:
-        """
-        Format Floats to be pleasant and human readable
-
-        Parameters
-        ----------
-        amount: float
-            Float Amount to be converted into a string
-        float_format: str
-            Type of String to format into (accepts "money" and "percent")
-
-        Returns
-        -------
-        str
-        """
-        # FORMAT MONEY FLOATS
-        if float_format == "money":
-            if amount < 0:
-                float_string = "$ ({:,.2f})".format(
-                    float(amount)).replace("-", "")
-            elif amount >= 0:
-                float_string = "$ {:,.2f}".format(
-                    float(amount))
-        # FORMAT PERCENTAGE FLOATS
-        elif float_format == "percent":
-            if amount < 0:
-                float_string = "({:.4f}) %".format(
-                    float(amount) * 100).replace("-", "")
-            elif amount >= 0:
-                float_string = "{:.4f} %".format(
-                    float(amount) * 100)
-        else:
-            float_string = str(amount)
-        return float_string
-
-    # @classmethod
-    # def format_float_dict(cls, dict, money_list=[], percent_list=[],
-    #                       ignore=[], all=None):
-    #     for key, value in dict.items():
-    #         if key in ignore:
-    #             pass
-    #         elif key in money_list:
-    #             dict[key] = cls._format_float(value, format="money")
-    #         elif key in percent_list:
-    #             dict[key] = cls._format_float(value, format="percent")
-    #         elif all:
-    #             dict[key] = cls._format_float(value, format=all)
-    #         else:
-    #             pass
 
     @classmethod
     def _categorize_expenses(cls, category: str, transaction: str) -> str:
@@ -367,8 +318,32 @@ class Dashboard(object):
         next_month = month_from_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         this_month = current_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         new_dataframe = dataframe.loc[(dataframe[date_column] >= this_month) &
-                                      (dataframe[date_column] < next_month)]
+                                      (dataframe[date_column] < next_month)].copy()
         return new_dataframe.reset_index(drop=True)
+
+    @classmethod
+    def _summarize_monthly_rollup(cls, dataframe: DataFrame) -> dict:
+        """
+        Summarize by Category - But handle exceptions for Savings Spend
+
+        Parameters
+        ----------
+        current_months_data
+
+        Returns
+        -------
+
+        """
+        current_months_data = cls._filter_to_current_month(dataframe=dataframe,
+                                                           date_column="date")
+        current_months_data["updated_amount"] = where(
+            current_months_data["category"] == "Savings Spend",
+            -current_months_data["amount"],
+            current_months_data["amount"])
+        monthly_totals = current_months_data.groupby(["expense_type"])[
+            "updated_amount"].sum().to_dict()
+        del current_months_data
+        return monthly_totals
 
     @classmethod
     def _get_monthly_totals(cls, dataframe: DataFrame):
@@ -391,15 +366,12 @@ class Dashboard(object):
         prepared_dict["percent_through_month"] = cls._percent_through_month()
         prepared_dict["current_budget"] = cls._get_current_budget()
         # FILTER THE DATA TO CURRENT DATE
-        current_months_data = cls._filter_to_current_month(dataframe=dataframe,
-                                                           date_column="date")
-        monthly_categories = \
-            current_months_data.groupby("expense_type")["amount"].sum().to_dict()
-        prepared_dict["monthly_housing"] = monthly_categories.get("Housing", 0.0)
-        prepared_dict["monthly_savings"] = monthly_categories.get("Savings", 0.0)
-        prepared_dict["monthly_income"] = -monthly_categories.get("Income", 0.0)
-        prepared_dict["monthly_adjustments"] = monthly_categories.get("Adjustment", 0.0)
-        prepared_dict["monthly_expenses"] = monthly_categories.get("Expense", 0.0)
+        updated_categories = cls._summarize_monthly_rollup(dataframe=dataframe)
+        prepared_dict["monthly_housing"] = updated_categories.get("Housing", 0.0)
+        prepared_dict["monthly_savings"] = updated_categories.get("Savings", 0.0)
+        prepared_dict["monthly_income"] = -updated_categories.get("Income", 0.0)
+        prepared_dict["monthly_adjustments"] = updated_categories.get("Adjustment", 0.0)
+        prepared_dict["monthly_expenses"] = updated_categories.get("Expense", 0.0)
         # PERFORM SOME AGGREGATIONS
         amount_under_budget = \
             (prepared_dict["percent_through_month"] * prepared_dict["current_budget"]) - \
@@ -477,6 +449,38 @@ class Dashboard(object):
         return miscellaneous_dict
 
     @classmethod
+    def _get_paycheck_count(cls, dataframe: DataFrame, employer: List[str]) -> float:
+        """
+        Get Current Month's Paycheck Count from Dataframe
+
+        Parameters
+        ----------
+        dataframe: DataFrame
+        employer: List[str]
+
+        Returns
+        -------
+        float
+        """
+        current_month_df = cls._filter_to_current_month(dataframe=dataframe,
+                                                        date_column="date")
+        current_month_income = current_month_df.loc[
+            current_month_df["expense_type"] == "Income"].copy()
+        del current_month_df
+        current_month_income["possible_employer"] = current_month_income["transaction"].apply(
+            lambda x: x.split(" - ")[0].upper())
+        current_month_income["possible_salary_string"] = current_month_income["transaction"].apply(
+            lambda x: x.split(" - ")[1].upper())
+        paycheck_count = len(
+            current_month_income.loc[
+                (current_month_income["possible_employer"].isin(employer)) &
+                (current_month_income["possible_salary_string"] == "SALARY")
+                ]
+        )
+        del current_month_income
+        return paycheck_count
+
+    @classmethod
     def _get_amount_to_save(cls, dataframe: DataFrame, finance_dict: dict) -> dict:
         """
         Get the projected amount to save at given point in the month
@@ -493,6 +497,7 @@ class Dashboard(object):
         miscellaneous_dict = cls._get_miscellaneous_data()
         employer_str = miscellaneous_dict["Employer"].split(",")
         employers = [employer.upper() for employer in employer_str]
+        paycheck_count = cls._get_paycheck_count(dataframe=dataframe, employer=employers)
         housing_amount = float(miscellaneous_dict["Monthly Rent"])
         bimonthly_income = float(miscellaneous_dict["Bi-Monthly Salary"])
         monthly_starting_balance = float(miscellaneous_dict["Monthly Starting Balance"])
@@ -501,14 +506,6 @@ class Dashboard(object):
         month_from_now = current_time + relativedelta(months=1)
         next_month = month_from_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        month_df = dataframe.loc[
-            (dataframe["date"] >= next_month) &
-            (dataframe["expense_type"] == "Income")]
-        month_df["possible_employer"] = month_df["transaction"].apply(
-            lambda x: x.split(" - ")[0].upper())
-        paycheck_count = len(month_df.loc[month_df["possible_employer"].isin(employers)])
-        del month_df
-
         next_month_rent = dataframe.loc[
             (dataframe["date"] >= next_month) &
             (dataframe["expense_type"] == "Housing")]["amount"].sum()
@@ -516,9 +513,9 @@ class Dashboard(object):
         money_left_to_spend = finance_dict["checking_balance"] - \
                               finance_dict["amount_budget_left"]
         money_left_after_rent = money_left_to_spend - (housing_amount - next_month_rent)
-        money_left_after_income = money_left_after_rent + \
-                                  cls._expected_income(pay_check_count=paycheck_count,
-                                                       bimonthly_income=bimonthly_income)
+        expected_income = cls._expected_income(pay_check_count=paycheck_count,
+                                               bimonthly_income=bimonthly_income)
+        money_left_after_income = money_left_after_rent + expected_income
         money_left_after_prorated_adj = money_left_after_income + \
                                         finance_dict["amount_under_budget"] - \
                                         monthly_starting_balance
@@ -559,20 +556,24 @@ class Dashboard(object):
         return prepared_dashboard_dict
 
     @staticmethod
-    def run_dashboard(dataframe: DataFrame) -> List[dict]:
+    def run_dashboard(dataframe: DataFrame,
+                      splitwise_balance: Optional[float] = None) -> List[dict]:
         """
         Run the whole gosh darn thing
 
         Parameters
         ----------
         dataframe : DataFrame
-
+        splitwise_balance : bool
+            Optional Updated Splitwise Balance
         Returns
         -------
         List[dict]
             Update Manifest
         """
         prepared_dashboard_dict = Dashboard._get_dashboard_dict(dataframe=dataframe)
+        if splitwise_balance is not None:
+            prepared_dashboard_dict["splitwise_balance"] = splitwise_balance
         processed_dashboard_dict = Dashboard._process_dashboard_dict(
             dashboard_dict=prepared_dashboard_dict)
         db_update_manifest = Dashboard._unload_dashboard_dict_to_manifest(
@@ -621,8 +622,8 @@ class Dashboard(object):
         final_expense_row = database_connection.get_last_expense()
         final_expense_date = datetime.fromisoformat(final_expense_row["date"]).strftime("%m/%d/%Y")
         final_expense_merchant = final_expense_row["transaction"].split(" - ")[0]
-        final_expense_amount = cls._format_float(amount=final_expense_row["amount"],
-                                                 float_format="money")
+        final_expense_amount = AdjuftmentsEncoder.format_float(amount=final_expense_row["amount"],
+                                                               float_format="money")
         final_expense_record = (f"{final_expense_date} - {final_expense_merchant} - "
                                 f"{final_expense_amount}")
         date_updated = datetime.now().strftime("%I:%M %p, %m/%d/%Y")
@@ -645,9 +646,10 @@ class Dashboard(object):
         updated_dict = dict()
         for key, value in dashboard_dict.items():
             try:
-                updated_dict[DashboardConfig.DICT_TO_DASHBOARD[key]] = cls._format_float(
-                    amount=value,
-                    float_format=DashboardConfig.DICT_TO_FORMAT[key])
+                updated_dict[DashboardConfig.DICT_TO_DASHBOARD[key]] = \
+                    AdjuftmentsEncoder.format_float(
+                        amount=value,
+                        float_format=DashboardConfig.DICT_TO_FORMAT[key])
             except KeyError:
                 pass
         return updated_dict
@@ -673,7 +675,7 @@ class Dashboard(object):
         dashboard_df.rename(columns={"index": "Measure"}, inplace=True)
         for index, row in dashboard_df.iterrows():
             formatted_measure = DashboardConfig.DICT_TO_DASHBOARD[row["Measure"]]
-            formatted_value = cls._format_float(
+            formatted_value = AdjuftmentsEncoder.format_float(
                 amount=row["Value"],
                 float_format=DashboardConfig.DICT_TO_FORMAT[row["Measure"]])
             dashboard_df.at[index, "Measure"] = formatted_measure
