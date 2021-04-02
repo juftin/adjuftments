@@ -7,7 +7,7 @@ AirTable Configuration.
 """
 
 import logging
-from os import environ, getenv
+from os import environ
 from typing import Dict, List
 
 from dotenv import load_dotenv
@@ -25,14 +25,13 @@ class AirtableConfig(object):
     """
     AIRTABLE_API_KEY: str = environ["AIRTABLE_API_KEY"]
     AIRTABLE_BASE: str = environ["AIRTABLE_BASE"]
-    _2020_AIRTABLE_BASE: str = (2020, getenv("AIRTABLE_BASE_2020", None))
-    _2019_AIRTABLE_BASE: str = (2019, getenv("AIRTABLE_BASE_2019", None))
-    _2018_AIRTABLE_BASE: str = (2018, getenv("AIRTABLE_BASE_2018", None))
-    _HISTORIC_BASES_PREP: List[str] = [_2018_AIRTABLE_BASE,
-                                       _2019_AIRTABLE_BASE,
-                                       _2020_AIRTABLE_BASE]
-    HISTORIC_BASES: Dict[str, str] = {str(year): base for (year, base) in _HISTORIC_BASES_PREP if
-                                      base is not None}
+
+    HISTORIC_BASES: Dict[str, str] = dict()
+    _historical_base_prefix = "AIRTABLE_HISTORICAL_BASE_"
+    for _environment_variable in environ.keys():
+        if _environment_variable.startswith(_historical_base_prefix):
+            _historical_year = _environment_variable.replace(_historical_base_prefix, "")
+            HISTORIC_BASES[_historical_year] = environ[_environment_variable]
 
 
 class AirtableColumnMapping(object):
