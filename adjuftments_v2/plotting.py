@@ -8,7 +8,6 @@ Adjuftments Plotting Utilities for Images
 
 from datetime import datetime
 import logging
-from os import getenv
 from time import sleep
 from typing import Dict
 
@@ -58,9 +57,7 @@ class AdjuftmentsPlotting(object):
         DataFrame
         """
         historic_dataframes = list()
-        historic_expenses_data = self.adjuftments._get_db_data(table="historic_expenses")
-        current_expenses_data = self.adjuftments._get_db_data(table="expenses")
-        total_expenses_data = historic_expenses_data + current_expenses_data
+        total_expenses_data = self.adjuftments._get_db_data(table="historic_expenses")
         expenses_df = Airtable.expenses_as_df(expense_array=total_expenses_data)
         for year, historic_base in self.historic_bases.items():
             annual_expenses = expenses_df[expenses_df.date.dt.year == int(year)].copy()

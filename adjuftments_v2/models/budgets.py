@@ -2,14 +2,19 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
+"""
+Budgets
+"""
+
 from sqlalchemy import func
 
 from adjuftments_v2.application import db
+from .utils import ModelDictionaryGenerator
 
 
-class BudgetsTable(db.Model):
+class BudgetsTable(db.Model, ModelDictionaryGenerator):
     """
-    Core Expenses Table
+    Core Budgets Table
     """
     __tablename__ = "budgets"
     __table_args__ = {"schema": "adjuftments"}
@@ -35,24 +40,3 @@ class BudgetsTable(db.Model):
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.month}>"
-
-    def to_dict(self) -> dict:
-        """
-        Return a flat dictionary with column mappings
-
-        Returns
-        -------
-        dict
-        """
-        return dict(
-            id=self.id,
-            month=self.month,
-            proposed_budget=self.proposed_budget,
-            actual_budget=self.actual_budget,
-            proposed_savings=self.proposed_savings,
-            amount_saved=self.amount_saved,
-            amount_spent=self.amount_spent,
-            amount_earned=self.amount_earned,
-            created_at=self.created_at,
-            updated_at=self.updated_at
-        )

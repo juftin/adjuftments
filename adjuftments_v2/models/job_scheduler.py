@@ -5,9 +5,10 @@
 from sqlalchemy import func
 
 from adjuftments_v2.application import db
+from .utils import ModelDictionaryGenerator
 
 
-class JobSchedulerTable(db.Model):
+class JobSchedulerTable(db.Model, ModelDictionaryGenerator):
     """
     Core Dashboard Table
     """
@@ -22,19 +23,3 @@ class JobSchedulerTable(db.Model):
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.measure}>"
-
-    def to_dict(self) -> dict:
-        """
-        Return a flat dictionary with column mappings
-
-        Returns
-        -------
-        dict
-        """
-        return dict(
-            id=self.id,
-            next_run_time=self.next_run_time,
-            job_state=self.job_state,
-            created_at=self.created_at,
-            updated_at=self.updated_at
-        )

@@ -2,7 +2,7 @@
 .idea/*
 venv/*
 postgres/*
-deadwood/*
+*/.ipynb_checkpoints/*
 
 ### Python template
 # Byte-compiled / optimized / DLL files

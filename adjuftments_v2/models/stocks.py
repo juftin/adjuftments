@@ -5,9 +5,10 @@
 from sqlalchemy import func
 
 from adjuftments_v2.application import db
+from .utils import ModelDictionaryGenerator
 
 
-class StocksTable(db.Model):
+class StocksTable(db.Model, ModelDictionaryGenerator):
     """
     Core Stocks Table
     """
@@ -28,23 +29,3 @@ class StocksTable(db.Model):
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.ticker}>"
-
-    def to_dict(self) -> dict:
-        """
-        Return a flat dictionary with column mappings
-
-        Returns
-        -------
-        dict
-        """
-        return dict(
-            id=self.id,
-            ticker=self.ticker,
-            stock_price=self.stock_price,
-            value=self.value,
-            holdings=self.holdings,
-            description=self.description,
-            cost_basis=self.cost_basis,
-            created_at=self.created_at,
-            updated_at=self.updated_at
-        )

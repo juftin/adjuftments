@@ -12,7 +12,7 @@ from json import loads
 from json.decoder import JSONDecodeError
 import logging
 from os import getenv
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from urllib.parse import urljoin, urlunparse
 
 from pytz import timezone, UTC
@@ -20,16 +20,9 @@ from requests import delete, get, post, Response
 
 from adjuftments_v2.config import AirtableConfig
 from adjuftments_v2.config import APIEndpoints
-from adjuftments_v2.utils import AdjuftmentsEncoder
+from adjuftments_v2.utils import AdjuftmentsEncoder, AdjuftmentsError, AdjuftmentsNotifications
 
 logger = logging.getLogger(__name__)
-
-
-class AdjuftmentsError(Exception):
-    """
-    Base Exception
-    """
-    pass
 
 
 class Adjuftments(object):
@@ -46,7 +39,7 @@ class Adjuftments(object):
         ----------
         endpoint: str
         """
-        self.scheme = "http" if https is False else "http"
+        self.scheme = "http" if https is False else "https"
         self.net_loc = endpoint if port is None else f"{endpoint}:{port}"
 
         self.port = port
@@ -71,7 +64,7 @@ class Adjuftments(object):
         elif str(clean_start).lower() == "auto":
             logger.info("Initializing Database")
             try:
-                data_size = len(self._get_db_data(table="expenses", params=dict(limit=1)))
+                data_size = len(self._get_db_data_soft_fail(table="expenses", params=dict(limit=1)))
                 if data_size == 0:
                     logger.info("No pre-existing data found, initiating clean start")
                     self._build_database(drop_all=True)
@@ -114,6 +107,21 @@ class Adjuftments(object):
                         f"{updated_record['value']}")
         return response_content
 
+    def refresh_adjuftments_data(self) -> Optional[float]:
+        """
+        Refresh the Splitwise / Airtable Data, Return an updated
+        Splitwise balance if new updates exist
+
+        Returns
+        -------
+        Optional[float]
+        """
+        updated_splitwise_balance = self.refresh_splitwise_data()
+        airtable_changes = self.refresh_airtable_expenses_data()
+        if updated_splitwise_balance is not None or airtable_changes > 0:
+            self.refresh_categories_data()
+        return updated_splitwise_balance
+
     def refresh_splitwise_data(self) -> Optional[float]:
         """
         Refresh the Splitwise table with the most recent data. Return an updated balance if
@@ -127,6 +135,7 @@ class Adjuftments(object):
         recent_data = self._get_new_splitwise_data()
         logger.info(f"Data Ingestion: Splitwise: {len(recent_data)} records")
         if len(recent_data) > 0:
+            AdjuftmentsNotifications.log_splitwise_expenses(splitwise_data_array=recent_data)
             self._load_db_data(table="splitwise", data_array=recent_data)
             splitwise_balance = self._get_splitwise_balance()
         else:
@@ -135,8 +144,8 @@ class Adjuftments(object):
         success_manifest, delete_manifest = self._generate_splitwise_manifest(
             data_array=recent_data)
         for airtable_record in success_manifest:
-            response = self._create_airtable_data(table="expenses",
-                                                  record=airtable_record)
+            self._create_airtable_data(table="expenses",
+                                       record=airtable_record)
         for airtable_record_deletion in delete_manifest:
             logger.info(f"Setting Splitwise record to deleted: {airtable_record_deletion['id']}")
             preexisting_airtable_data = self._get_db_data(
@@ -164,6 +173,7 @@ class Adjuftments(object):
         """
         latest_airtable_data = self._get_new_airtable_expenses_data()
         logger.info(f"Data Ingestion: Airtable: {len(latest_airtable_data)} records")
+        AdjuftmentsNotifications.log_airtable_expenses(airtable_data_array=latest_airtable_data)
         # LOOP THROUGH NEW DATA
         for airtable_expense in latest_airtable_data:
             # IF THE RECORD CONTAINS DELETE
@@ -252,14 +262,14 @@ class Adjuftments(object):
 
         # GET
 
-    def _get_airtable_data(self, table: str, params: dict = None):
+    def _get_airtable_data(self, table: str, params: Optional[dict] = None):
         """
         Update a record in Airtable
 
         Parameters
         ----------
         table: str
-        params: dict
+        params: Optional[dict]
 
         Returns
         -------
@@ -291,14 +301,29 @@ class Adjuftments(object):
         """
         api_endpoint = urljoin(self.endpoint, APIEndpoints.SPLITWISE_BALANCE)
         splitwise_response = get(url=api_endpoint, headers=self.headers)
+        if splitwise_response.status_code != 200:
+            logger.error(splitwise_response.text)
+            raise AdjuftmentsError(splitwise_response.text)
         return loads(splitwise_response.content)["balance"]
 
-    def _get_splitwise_data(self, params: dict = None):
+    def _get_splitwise_data(self, params: Optional[dict] = None) -> dict:
         """
         Get and Process some Splitwise Data
+
+
+        Parameters
+        ----------
+        params : Optional[dict]
+
+        Returns
+        -------
+        dict
         """
         api_endpoint = urljoin(self.endpoint, APIEndpoints.SPLITWISE_EXPENSES)
         splitwise_response = get(url=api_endpoint, params=params, headers=self.headers)
+        if splitwise_response.status_code != 200:
+            logger.error(splitwise_response.text)
+            raise AdjuftmentsError(splitwise_response.text)
         return loads(splitwise_response.content)
 
     def _get_db_record(self, table: str, record_id: str):
@@ -318,31 +343,44 @@ class Adjuftments(object):
         Get and Process some Database Data
         """
         api_endpoint = urljoin(self.endpoint, f"{APIEndpoints.ADJUFTMENTS_BASE}/{table}")
-        splitwise_response = get(url=api_endpoint, params=params, headers=self.headers)
-        return loads(splitwise_response.content)
+        response = get(url=api_endpoint, params=params, headers=self.headers)
+        if response.status_code != 200:
+            logger.error(response.text)
+            raise AdjuftmentsError(response.text)
+        return loads(response.content)
+
+    def _get_db_data_soft_fail(self, table: str, params: dict = None):
+        """
+        Get and Process some Database Data
+        """
+        api_endpoint = urljoin(self.endpoint, f"{APIEndpoints.ADJUFTMENTS_BASE}/{table}")
+        response = get(url=api_endpoint, params=params, headers=self.headers)
+        return loads(response.content)
 
     def _get_current_months_categories(self):
         """
         Get the current months expenses from the database
         """
         api_endpoint = urljoin(self.endpoint, APIEndpoints.EXPENSE_CATEGORIES)
-        splitwise_response = get(url=api_endpoint, headers=self.headers)
-        return loads(splitwise_response.content)
+        response = get(url=api_endpoint, headers=self.headers)
+        if response.status_code != 200:
+            logger.error(response.text)
+            raise AdjuftmentsError(response.text)
+        return loads(response.content)
 
-    def _get_splitwise_timestamp(self) -> datetime:
+    def _get_splitwise_timestamp(self) -> Dict[str, datetime]:
         """
         Get the latest modified timestamp from splitwise database table
 
         Returns
         -------
-        datetime
+        Dict[str, datetime]
         """
         api_endpoint = urljoin(self.endpoint, APIEndpoints.SPLITWISE_UPDATED_AT)
         response = get(url=api_endpoint,
                        headers=self.headers)
-        if response.status_code == 200:
-            return loads(response.content)
-        else:
+        if response.status_code != 200:
+            logger.error(response.text)
             raise AdjuftmentsError(response.text)
         return loads(response.content)
 
@@ -374,10 +412,10 @@ class Adjuftments(object):
         api_endpoint = urljoin(self.endpoint, f"{APIEndpoints.STOCK_TICKER_API}/{ticker.lower()}")
         response = get(url=api_endpoint,
                        headers=self.headers)
-        if response.status_code == 200:
-            return loads(response.content)
-        else:
+        if response.status_code != 200:
+            logger.error(response.text)
             raise AdjuftmentsError(response.text)
+        return loads(response.content)
 
     @classmethod
     def _get_miscellaneous_dict(cls, miscellaneous_data: List[dict]) -> dict:
@@ -400,7 +438,7 @@ class Adjuftments(object):
 
     # LOAD
 
-    def _load_db_record(self, table: str, record: dict) -> None:
+    def _load_db_record(self, table: str, record: dict) -> Response:
         """
         Load record to database
 
@@ -577,7 +615,7 @@ class Adjuftments(object):
 
     # DELETE
 
-    def _delete_airtable_data(self, table: str, record_id: str) -> Response:
+    def _delete_airtable_data(self, table: str, record_id: str) -> Optional[Response]:
         """
         Delete a record from airtable
 
@@ -599,7 +637,7 @@ class Adjuftments(object):
             logger.error(response.text)
             return None
 
-    def _delete_splitwise_data(self, record_id: str) -> Response:
+    def _delete_splitwise_data(self, record_id: str) -> Optional[Response]:
         """
         Delete a record from Splitwise
 
@@ -665,8 +703,7 @@ class Adjuftments(object):
         if response.status_code != 200:
             logger.error(response.text)
             raise AdjuftmentsError(response.text)
-        response_content = loads(response.content)
-        return response_content
+        return loads(response.content)
 
     def _handle_airtable_splitwise_request(self, airtable_expense: dict):
         """
@@ -717,8 +754,7 @@ class Adjuftments(object):
         splitwise_id = airtable_expense["splitwise_id"]
         if splitwise_id is not None:
             # DELETE FROM SPLITWISE
-            # TODO: REENABLE THIS ONCE READY FOR PROD
-            response = self._delete_splitwise_data(record_id=splitwise_id)
+            self._delete_splitwise_data(record_id=splitwise_id)
             # DELETE SPLITWISE RECORD FROM DB
             self._delete_db_record(table="splitwise", record_id=splitwise_id)
         # DELETE EXPENSE RECORD FROM DB
@@ -793,10 +829,10 @@ class Adjuftments(object):
         response = post(url=api_endpoint,
                         json=dict(drop_all=drop_all),
                         headers=self.headers)
-        if response.status_code == 200:
-            return loads(response.content)
-        else:
+        if response.status_code != 200:
+            logger.error(response.text)
             raise AdjuftmentsError(response.text)
+        return loads(response.content)
 
     def _clean_start(self, run: bool = True) -> None:
         """
@@ -818,7 +854,7 @@ class Adjuftments(object):
             self._clean_start_miscellaneous_data()
             self._clean_start_splitwise_data()
             self._clean_start_expenses_data()
-            self._clean_start_historic_expenses_data()
+            self._clean_start_historic_expenses_data()  # MUST GO AFTER EXPENSES
             self._clean_start_stocks_data()
 
     def _clean_start_database_users(self):
@@ -849,7 +885,9 @@ class Adjuftments(object):
             historic_expenses_data += self._get_airtable_data(
                 table="expenses",
                 params=dict(airtable_base=historic_base))
-        self._load_db_data(table="historic_expenses", data_array=historic_expenses_data)
+        current_years_data = self._get_db_data(table="expenses")
+        self._load_db_data(table="historic_expenses",
+                           data_array=historic_expenses_data + current_years_data)
 
     def _clean_start_splitwise_data(self):
         """

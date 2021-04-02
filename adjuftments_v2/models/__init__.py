@@ -21,27 +21,33 @@ from .splitwise import SplitwiseTable
 from .stocks import StocksTable
 from .users import UsersTable
 
+# noinspection PyTypeChecker
 ALL_TABLES: List[Model] = [
     BudgetsTable,
     CategoriesTable,
     DashboardTable,
     ExpensesTable,
     HistoricExpensesTable,
+    JobSchedulerTable,
     MiscellaneousTable,
     SplitwiseTable,
     StocksTable,
-    UsersTable,
-    JobSchedulerTable
+    UsersTable
 ]
+_private_data_tables = [UsersTable, JobSchedulerTable]
+MODEL_FINDER: Dict[str, Model] = {table.__tablename__: table for table in
+                                  (set(ALL_TABLES) - set(_private_data_tables))}
 
-MODEL_FINDER: Dict[str, Model] = {
-    "budgets": BudgetsTable,
-    "categories": CategoriesTable,
-    "dashboard": DashboardTable,
-    "expenses": ExpensesTable,
-    "historic_expenses": HistoricExpensesTable,
-    "miscellaneous": MiscellaneousTable,
-    "splitwise": SplitwiseTable,
-    "stocks": StocksTable,
-    "users": UsersTable
-}
+__all__ = [
+    "BudgetsTable",
+    "CategoriesTable",
+    "DashboardTable",
+    "ExpensesTable",
+    "HistoricExpensesTable",
+    "JobSchedulerTable",
+    "MiscellaneousTable",
+    "SplitwiseTable",
+    "StocksTable",
+    "UsersTable",
+    "MODEL_FINDER"
+]

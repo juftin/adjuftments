@@ -3,15 +3,18 @@
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
 """
-Generic Utilities for Adjuftments
+JSON PArsing Utility for Adjuftments
 """
 
 from datetime import date, timedelta
 from datetime import datetime
 import decimal
 from json import dumps, loads
+import logging
 
 from flask.json import JSONEncoder
+
+logger = logging.getLogger(__name__)
 
 
 class AdjuftmentsEncoder(JSONEncoder):

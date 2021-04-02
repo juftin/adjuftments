@@ -5,13 +5,14 @@
 from sqlalchemy import func
 
 from adjuftments_v2.application import db
+from .utils import ModelDictionaryGenerator
 
 
-class CategoriesTable(db.Model):
+class CategoriesTable(db.Model, ModelDictionaryGenerator):
     """
     Core Dashboard Table
     """
-    __tablename__ = "catgories"
+    __tablename__ = "categories"
     __table_args__ = {"schema": "adjuftments"}
 
     id = db.Column(db.String(32), primary_key=True, unique=True, nullable=False)
@@ -25,20 +26,3 @@ class CategoriesTable(db.Model):
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.category}>"
-
-    def to_dict(self) -> dict:
-        """
-        Return a flat dictionary with column mappings
-
-        Returns
-        -------
-        dict
-        """
-        return dict(
-            id=self.id,
-            category=self.category,
-            amount_spent=self.amount_spent,
-            percent_of_total=self.percent_of_total,
-            created_at=self.created_at,
-            updated_at=self.updated_at
-        )

@@ -37,7 +37,6 @@ class AdjuftmentsScheduler(object):
         """
         self.local_timezone = timezone(getenv("TZ", default=tzlocal()))
         # A LIGHTWEIGHT SCHEDULER
-        logger.info(FlaskDefaultConfig.SQLALCHEMY_DATABASE_URI)
         self.scheduler = BlockingScheduler(
             jobstores=dict(default=SQLAlchemyJobStore(
                 url=FlaskDefaultConfig.SQLALCHEMY_DATABASE_URI,
@@ -59,7 +58,7 @@ class AdjuftmentsScheduler(object):
                                name="Refresh Stocks Data",
                                trigger=CronTrigger(day_of_week="MON,TUE,WED,THU,FRI",
                                                    hour="9-16",
-                                                   minute="0/1"),
+                                                   minute="0/5"),
                                timezone=timezone("US/Eastern"),
                                replace_existing=True)
         # CLEAN UP THE BUDGETS DATA NIGHTLY @ 5:00AM
@@ -86,28 +85,36 @@ class AdjuftmentsScheduler(object):
                                                    minute="2"),
                                timezone=self.local_timezone,
                                replace_existing=True)
-        # REFRESH THE IMAGES NIGHTLY @ 5:03AM
-        self.scheduler.add_job(func=self.adjuftments_plotting.refresh_images,
-                               id="sync_plotting_data",
-                               name="Sync Plotting Data",
+        # CLEAN UP THE MISCELLANEOUS DATA NIGHTLY @ 5:03AM
+        self.scheduler.add_job(func=self.adjuftments._clean_start_historic_expenses_data,
+                               id="sync_historic_expenses_data",
+                               name="Sync Historic Expenses Data",
                                trigger=CronTrigger(hour="5",
                                                    minute="3"),
                                timezone=self.local_timezone,
                                replace_existing=True)
         # REFRESH THE CATEGORIES NIGHTLY @ 5:04AM
         self.scheduler.add_job(func=self.adjuftments.refresh_categories_data,
-                               id="sync_categories_data",
-                               name="Sync Category Data",
+                               id="refresh_categories_data",
+                               name="Refresh Category Data",
                                trigger=CronTrigger(hour="5",
                                                    minute="4"),
                                timezone=self.local_timezone,
                                replace_existing=True)
         # REFRESH THE DASHBOARD NIGHTLY @ 5:05AM
         self.scheduler.add_job(func=self.adjuftments.refresh_dashboard,
-                               id="sync_dashboard_data",
-                               name="Sync Dashboard Data",
+                               id="refresh_dashboard_data",
+                               name="Refresh Dashboard Data",
                                trigger=CronTrigger(hour="5",
                                                    minute="5"),
+                               timezone=self.local_timezone,
+                               replace_existing=True)
+        # REFRESH THE IMAGES NIGHTLY @ 5:06AM
+        self.scheduler.add_job(func=self.adjuftments_plotting.refresh_images,
+                               id="refresh_images_data",
+                               name="Refresh Images Data",
+                               trigger=CronTrigger(hour="5",
+                                                   minute="6"),
                                timezone=self.local_timezone,
                                replace_existing=True)
 

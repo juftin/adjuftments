@@ -16,15 +16,17 @@ from urllib.parse import urljoin
 from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 from flask import abort, jsonify, request, Response
+from flask_login import login_required
 from flask_sqlalchemy import Model
 from pandas import DataFrame
 from requests import delete, get, post
+from sqlalchemy import func
 
-from adjuftments_v2 import Airtable, Dashboard, database_connection, Splitwise
+from adjuftments_v2 import Airtable, Dashboard, Splitwise
 from adjuftments_v2.application import app, db, login_manager
-from adjuftments_v2.config import AirtableConfig, APIEndpoints, FlaskDefaultConfig, SplitwiseConfig
-from adjuftments_v2.config import DOT_ENV_FILE_PATH
-from adjuftments_v2.models import MODEL_FINDER
+from adjuftments_v2.config import (AirtableConfig, APIEndpoints, DOT_ENV_FILE_PATH,
+                                   FlaskDefaultConfig, SplitwiseConfig)
+from adjuftments_v2.models import DashboardTable, ExpensesTable, MODEL_FINDER, UsersTable
 from adjuftments_v2.utils import AdjuftmentsEncoder
 
 load_dotenv(DOT_ENV_FILE_PATH, override=True)
@@ -51,7 +53,7 @@ def load_user_from_request(flask_request: request) -> Optional[Model]:
     api_token = flask_request.headers.get("Authorization")
     if api_token is not None:
         api_token = api_token.replace('Bearer ', '', 1)
-        user = MODEL_FINDER["users"].query.filter_by(api_token=api_token).first()
+        user = UsersTable.query.filter_by(api_token=api_token).first()
         if user is not None:
             return user
     # finally, return None if both methods did not login the user
@@ -69,10 +71,10 @@ def clean_start_system_users() -> Response:
                          f"endpoint to work: {APIEndpoints.ADMIN_USERS}")
     clean_start_param = request.json.get("clean_start")
     if clean_start_param is True:
-        all_users = MODEL_FINDER["users"].query.all()
+        all_users = UsersTable.query.all()
         if len(all_users) != 0:
             abort(status=500, description=error_description)
-        adjuftments_user = MODEL_FINDER["users"](username=FlaskDefaultConfig.DATABASE_USERNAME)
+        adjuftments_user = UsersTable(username=FlaskDefaultConfig.DATABASE_USERNAME)
         adjuftments_user.set_api_token(api_token=FlaskDefaultConfig.API_TOKEN)
         db.session.merge(adjuftments_user)
         db.session.commit()
@@ -82,15 +84,15 @@ def clean_start_system_users() -> Response:
 
 
 @app.route(rule=APIEndpoints.ADMIN_USERS, methods=["GET"])
-# @login_required
+@login_required
 def interact_with_system_users() -> Response:
-    all_users = MODEL_FINDER["users"].query.all()
+    all_users = UsersTable.query.all()
     prepared_users = [user.to_dict() for user in all_users]
     return jsonify(prepared_users)
 
 
 @app.route(rule=f"{APIEndpoints.AIRTABLE_BASE}/<table>", methods=["GET", "POST"])
-# @login_required
+@login_required
 def interact_with_airtable_table(table: str) -> Response:
     """
     Interact with an Airtable table depending on the HTTP Request type.
@@ -128,7 +130,7 @@ def interact_with_airtable_table(table: str) -> Response:
 
 @app.route(rule=f"{APIEndpoints.AIRTABLE_BASE}/<table>/<record_id>",
            methods=["GET", "POST", "DELETE"])
-# @login_required
+@login_required
 def interact_with_airtable_record(table: str, record_id: str) -> Response:
     """
 
@@ -170,7 +172,7 @@ def interact_with_airtable_record(table: str, record_id: str) -> Response:
 
 
 @app.route(rule=APIEndpoints.SPLITWISE_EXPENSES, methods=["GET", "POST"])
-# @login_required
+@login_required
 def interact_with_splitwise_expenses() -> Response:
     """
     Interact with an Splitwise table depending on the HTTP Request type.
@@ -198,7 +200,7 @@ def interact_with_splitwise_expenses() -> Response:
 
 
 @app.route(rule=f"{APIEndpoints.SPLITWISE_EXPENSES}/<record_id>", methods=["GET", "DELETE"])
-# @login_required
+@login_required
 def interact_with_splitwise_record(record_id: int) -> Response:
     """
     Interact with an Splitwise table depending on the HTTP Request type.
@@ -228,7 +230,7 @@ def interact_with_splitwise_record(record_id: int) -> Response:
 
 
 @app.route(rule=APIEndpoints.SPLITWISE_BALANCE, methods=["GET"])
-# @login_required
+@login_required
 def get_splitwise_balance() -> Response:
     """
     Retrieve Current Balance with Splitwise Partner
@@ -245,7 +247,7 @@ def get_splitwise_balance() -> Response:
 
 
 @app.route(rule=f"{APIEndpoints.ADJUFTMENTS_BASE}/<table>", methods=["GET", "POST"])
-# @login_required
+@login_required
 def interact_with_adjuftments_table(table: str) -> Response:
     """
     Interact with an Adjuftments SQL Table
@@ -256,7 +258,11 @@ def interact_with_adjuftments_table(table: str) -> Response:
     -------
 
     """
-    adjuftments_table = MODEL_FINDER[table]
+    adjuftments_table = MODEL_FINDER.get(table, None)
+    if adjuftments_table is None:
+        abort(status=500,
+              description=("Adjuftments table does not exist or "
+                           f"is not externally accessible: {table}"))
     # GET DATA
     if request.method == "GET":
         request_args = request.args.to_dict()
@@ -284,7 +290,7 @@ def interact_with_adjuftments_table(table: str) -> Response:
 
 
 @app.route(rule=APIEndpoints.EXPENSE_CATEGORIES, methods=["GET"])
-# @login_required
+@login_required
 def get_current_months_expenses() -> Response:
     """
     Interact with an Adjuftments SQL Table
@@ -295,7 +301,7 @@ def get_current_months_expenses() -> Response:
     -------
 
     """
-    adjuftments_table = MODEL_FINDER["expenses"]
+    adjuftments_table = ExpensesTable
     # DEFINE DATE WINDOWS
     current_time = datetime.now()
     month_from_now = current_time + relativedelta(months=1)
@@ -303,10 +309,10 @@ def get_current_months_expenses() -> Response:
     this_month = current_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     # GET DATA
     date_filter = adjuftments_table.date.between(this_month, next_month)
-    response: List[Model] = adjuftments_table.query.filter(date_filter)
+    response: List[Model] = adjuftments_table.query.filter(date_filter).all()
     if response is None:
         abort(status=404, description=f"Something went wrong fetching this months data")
-    elif response.count() == 0:
+    elif len(response) == 0:
         return jsonify(dict())
     response_array = [result.to_dict() for result in response]
     current_categories = DataFrame(response_array).groupby(["category"])["amount"].sum().to_dict()
@@ -324,7 +330,7 @@ def get_current_months_expenses() -> Response:
 
 
 @app.route(rule=f"{APIEndpoints.ADJUFTMENTS_BASE}/<table>/<key>", methods=["GET", "POST", "DELETE"])
-# @login_required
+@login_required
 def interact_with_adjuftments_record(table: str, key: Union[str, int]) -> Response:
     """
     Retrieve a Single Record by its primary key
@@ -337,7 +343,11 @@ def interact_with_adjuftments_record(table: str, key: Union[str, int]) -> Respon
     -------
 
     """
-    adjuftments_table = MODEL_FINDER[table]
+    adjuftments_table = MODEL_FINDER.get(table, None)
+    if adjuftments_table is None:
+        abort(status=500,
+              description=("Adjuftments table does not exist or "
+                           f"is not externally accessible: {table}"))
     selected_row: Model = adjuftments_table.query.get(key)
     # GET THE DATA
     if request.method == "GET":
@@ -379,7 +389,7 @@ def interact_with_adjuftments_record(table: str, key: Union[str, int]) -> Respon
 
 
 @app.route(rule=f"{APIEndpoints.STOCK_TICKER_API}/<ticker>", methods=["GET"])
-# @login_required
+@login_required
 def get_stock_ticker(ticker: str) -> Response:
     """
     Get Stock Prices
@@ -398,7 +408,7 @@ def get_stock_ticker(ticker: str) -> Response:
 
 
 @app.route(rule=APIEndpoints.DASHBOARD_GENERATOR, methods=["POST"])
-# @login_required
+@login_required
 def refresh_dashboard() -> Response:
     """
     Refresh Adjuftments Dashboard
@@ -408,7 +418,7 @@ def refresh_dashboard() -> Response:
 
     logger.info("Retrieving Data for Dashboard")
     clean_data_filter = dict(imported=True, delete=False)
-    adjuftments_table = MODEL_FINDER["expenses"]
+    adjuftments_table = ExpensesTable
     response = adjuftments_table.query.filter_by(**clean_data_filter).limit(None)
     response_array = [result.to_dict() for result in response]
     cleaned_response_array = AdjuftmentsEncoder.parse_object(response_array)
@@ -425,7 +435,7 @@ def refresh_dashboard() -> Response:
                                fields=update_fields,
                                typecast=True)
     logger.info("Dashboard Refresh Complete")
-    all_dashboard_data = MODEL_FINDER["dashboard"].query.limit(None)
+    all_dashboard_data = DashboardTable.query.limit(None)
     response_array = [result.to_dict() for result in all_dashboard_data]
     response_dict = dict(manifest=dashboard_manifest,
                          dashboard=response_array)
@@ -456,21 +466,21 @@ def prepare_database() -> Response:
 
 
 @app.route(rule=APIEndpoints.SPLITWISE_UPDATED_AT, methods=["GET"])
-# @login_required
+@login_required
 def get_splitwise_updated_timestamp() -> Response:
     """
     Retrieve Max Timestamp from Splitwise (for ETL)
     """
-    max_splitwise_timestamp = database_connection.get_max_date(table="splitwise",
-                                                               date_column="updated_at",
-                                                               replace_none=True)
+    max_splitwise_timestamp = get_max_date(table="splitwise",
+                                           date_column="updated_at",
+                                           replace_none=True)
     new_data_updated_after = max_splitwise_timestamp + timedelta(microseconds=1)
     params = dict(updated_after=new_data_updated_after)
     return jsonify(params)
 
 
 @app.route(rule=APIEndpoints.IMAGES_ENDPOINT, methods=["POST"])
-# @login_required
+@login_required
 def upload_imgur_image() -> Response:
     """
     Retrieve Max Timestamp from Splitwise (for ETL)
@@ -488,7 +498,7 @@ def upload_imgur_image() -> Response:
 
 
 @app.route(rule=f"{APIEndpoints.IMAGES_ENDPOINT}/<image_delete_hash>", methods=["DELETE"])
-# @login_required
+@login_required
 def delete_imgur_image(image_delete_hash: str) -> Response:
     """
     Retrieve Max Timestamp from Splitwise (for ETL)
@@ -500,3 +510,40 @@ def delete_imgur_image(image_delete_hash: str) -> Response:
     if response.status_code != 200:
         abort(status=response.status_code, description=response.text)
     return jsonify(loads(response.content))
+
+
+@app.route(rule=APIEndpoints.HEALTHCHECK, methods=["GET"])
+def check_api_health() -> Response:
+    """
+    Retrieve Max Timestamp from Splitwise (for ETL)
+    """
+    return jsonify(True)
+
+
+def get_max_date(table: str, date_column: str,
+                 replace_none: bool = False) -> datetime:
+    """
+    Retrieve a Max Date Column from Table
+
+    Parameters
+    ----------
+    table: str
+        DB Table
+    date_column: str
+        column name
+    replace_none: bool
+        Whether to replace a very old timestamp instead of None
+
+    Returns
+    -------
+    datetime
+    """
+    database_table = MODEL_FINDER.get(table, None)
+    if database_table is None:
+        abort(status=500, description=f"Table doesn't exist: {table}")
+    database_column = getattr(database_table, date_column)
+    response = db.session.query(func.max(database_column)).first()
+    if replace_none is True and response[0] is None:
+        response = (datetime(year=1975, month=1, day=1), None)
+    max_value = response[0]
+    return max_value

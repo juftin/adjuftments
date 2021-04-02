@@ -40,7 +40,7 @@ class FlaskDefaultConfig(object):
         API_ENDPOINT = "localhost"
     else:
         DATABASE_HOST = environ["DATABASE_HOST"]
-        API_ENDPOINT = "webserver"
+        API_ENDPOINT = environ["ADJUFTMENTS_API_HOST"]
     DATABASE_PORT = 5432
     DATABASE_NAME = environ["DATABASE_DB"]
 
@@ -91,3 +91,4 @@ class APIEndpoints(object):
     ADMIN_USERS: str = f"{ADMIN_BASE}/users"
     EXPENSE_CATEGORIES = f"{FINANCE_BASE}/categories"
     IMAGES_ENDPOINT = f"{FINANCE_BASE}/images"
+    HEALTHCHECK: str = f"{ADMIN_BASE}/health"

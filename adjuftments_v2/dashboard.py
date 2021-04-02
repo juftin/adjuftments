@@ -15,10 +15,9 @@ from dateutil.relativedelta import relativedelta
 from numpy import where
 from pandas import DataFrame, Series
 
-from adjuftments_v2 import database_connection
 from adjuftments_v2.application import db
 from adjuftments_v2.config import DashboardConfig
-from adjuftments_v2.models import DashboardTable
+from adjuftments_v2.models import BudgetsTable, DashboardTable, ExpensesTable, MiscellaneousTable
 from adjuftments_v2.utils import AdjuftmentsEncoder
 
 logger = logging.getLogger(__name__)
@@ -294,9 +293,9 @@ class Dashboard(object):
             Current Budget
         """
         query_filter = dict(month=datetime.now().strftime(format="%B"))
-        current_budget_row = database_connection.return_single_row(table="budgets",
-                                                                   query_filter=query_filter)
-        current_budget = current_budget_row["proposed_budget"]
+        response = BudgetsTable.query.filter_by(**query_filter).first()
+        formatted_response = AdjuftmentsEncoder.parse_object(obj=response.to_dict())
+        current_budget = formatted_response["proposed_budget"]
         return current_budget
 
     @classmethod
@@ -440,8 +439,12 @@ class Dashboard(object):
         -------
         dict
         """
-        miscellaneous_table = database_connection.query_table(table="miscellaneous")
-        miscellaneous_df = DataFrame(miscellaneous_table)
+        database_response = MiscellaneousTable.query.all()
+        compiled_response = list()
+        for record in database_response:
+            cleaned_response = AdjuftmentsEncoder.parse_object(obj=record.to_dict())
+            compiled_response.append(cleaned_response)
+        miscellaneous_df = DataFrame(compiled_response)
         miscellaneous_dict = \
             miscellaneous_df[["measure", "value"]]. \
                 set_index("measure"). \
@@ -619,7 +622,9 @@ class Dashboard(object):
         -------
         dict
         """
-        final_expense_row = database_connection.get_last_expense()
+        response = ExpensesTable.query.order_by(ExpensesTable.date.desc(),
+                                                ExpensesTable.imported_at.desc()).first()
+        final_expense_row = AdjuftmentsEncoder.parse_object(obj=response.to_dict())
         final_expense_date = datetime.fromisoformat(final_expense_row["date"]).strftime("%m/%d/%Y")
         final_expense_merchant = final_expense_row["transaction"].split(" - ")[0]
         final_expense_amount = AdjuftmentsEncoder.format_float(amount=final_expense_row["amount"],
@@ -683,9 +688,9 @@ class Dashboard(object):
         return dashboard_df
 
     @classmethod
-    def _unload_dashboard_dict_to_manifest(cls, dashboard_dict: dict) -> bool:
+    def _unload_dashboard_dict_to_manifest(cls, dashboard_dict: dict) -> List[dict]:
         """
-        Upload a Dashboard
+        Upload a Dashboard to a Manifest
 
         Parameters
         ----------
@@ -693,7 +698,7 @@ class Dashboard(object):
 
         Returns
         -------
-        bool
+        List[dict]
         """
         manifest = list()
         for measure, value in dashboard_dict.items():

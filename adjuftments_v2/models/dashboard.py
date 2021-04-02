@@ -5,9 +5,10 @@
 from sqlalchemy import func
 
 from adjuftments_v2.application import db
+from .utils import ModelDictionaryGenerator
 
 
-class DashboardTable(db.Model):
+class DashboardTable(db.Model, ModelDictionaryGenerator):
     """
     Core Dashboard Table
     """
@@ -24,19 +25,3 @@ class DashboardTable(db.Model):
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.measure}>"
-
-    def to_dict(self) -> dict:
-        """
-        Return a flat dictionary with column mappings
-
-        Returns
-        -------
-        dict
-        """
-        return dict(
-            id=self.id,
-            measure=self.measure,
-            value=self.value,
-            created_at=self.created_at,
-            updated_at=self.updated_at
-        )

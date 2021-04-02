@@ -7,28 +7,35 @@ Example Run All Script
 """
 
 import logging
-from os import getenv
-from time import sleep
 
-from adjuftments_v2.adjuftments import Adjuftments
+from adjuftments_v2 import Adjuftments
 from adjuftments_v2.config import FlaskDefaultConfig
+from adjuftments_v2.utils import (AdjuftmentsError, AdjuftmentsNotifications,
+                                  run_adjuftments_refresh_pipeline)
 
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
+    console_handler = logging.StreamHandler()
+    pushover_handler = AdjuftmentsNotifications(level=logging.ERROR)
     logging.basicConfig(format="%(asctime)s [%(levelname)8s]: %(message)s [%(name)s]",
-                        handlers=[logging.StreamHandler()],
+                        handlers=[console_handler,
+                                  pushover_handler],
                         level=logging.INFO)
+    # ESTABLISH THE ADJUFTMENTS CLASS
     juftin = Adjuftments(endpoint=FlaskDefaultConfig.API_ENDPOINT,
                          api_token=FlaskDefaultConfig.API_TOKEN,
                          https=False, port=5000)
+    # PREPARE THE DATABASE
     juftin.prepare_database(clean_start="auto")
-
-    continue_running = True
-    while continue_running is True:
-        updated_splitwise_balance = juftin.refresh_splitwise_data()
-        airtable_changes = juftin.refresh_airtable_expenses_data()
-        if updated_splitwise_balance is not None or airtable_changes > 0:
-            juftin.refresh_categories_data()
-        juftin.refresh_dashboard(splitwise_balance=updated_splitwise_balance)
-        sleep(30)
+    # RETRY @ 10S, 30S, 1M, 5M, 10M, 30M, 60M
+    sleep_configuration = [10, 30, 60, 300, 600, 1800, 3600]  # [1, 2, 3, 4, 5, 6, 7]
+    # START LOGGING ERRORS @ 10M
+    error_log_index = 4
+    # RUN THE DATA REFRESH JOB
+    run_adjuftments_refresh_pipeline(sleep_config=sleep_configuration,
+                                     primary_function=juftin.refresh_adjuftments_data,
+                                     finally_function=juftin.refresh_dashboard,
+                                     error_index=error_log_index,
+                                     catchable_error=AdjuftmentsError,
+                                     between_loops_sleep=30)

@@ -18,59 +18,76 @@ services:
     # POSTGRES DATABASE
     ####################################
 
-    database:
-        container_name: postgres
+    adjuftments-database:
+        container_name: adjuftments-database
         image:          postgres:13.1
         environment:
-            - POSTGRES_USER=${DATABASE_USER}
-            - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-            - POSTGRES_DB=${DATABASE_DB}
-            - ALLOW_IP_RANGE="0.0.0.0/0"
-            - TZ=UTC
-            - PG_TZ=UTC
+            POSTGRES_USER:     ${DATABASE_USER}
+            POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+            POSTGRES_DB:       ${DATABASE_DB}
+            ALLOW_IP_RANGE:    "0.0.0.0/0"
+            TZ:                UTC
+            PG_TZ:             UTC
         volumes:
             - ${DOCKER_DIRECTORY}/postgres/:/var/lib/postgresql/data
-        logging:
-            options:
-                max-size: 10m
-                max-file: "3"
-        healthcheck:
-            test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-            interval: 10s
-            timeout:  5s
-            retries:  5
-        restart:        unless-stopped
         networks:
             adjuftments: null
         ports:
             - "5432:5432"
+        restart:        unless-stopped
+        healthcheck:
+            test: [ "CMD-SHELL",
+                    "pg_isready --username=${DATABASE_USER} --dbname=${DATABASE_DB}" ]
+            interval:     10s
+            timeout:      5s
+            retries:      5
+            start_period: 10s
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
 
     ####################################
-    # FLASK WEBSERVER
+    # FLASK api
     ####################################
 
-    webserver:
-        container_name: webserver
+    adjuftments-api:
+        container_name: adjuftments-api
         build:
             context:    ${DOCKER_DIRECTORY}/build/
             dockerfile: Dockerfile
+        environment:
+            TZ:                 ${TZ}
+            DOCKER_ENVIRONMENT: "True"
+        volumes:
+            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
         networks:
             adjuftments: null
         ports:
             - "5000:5000"
-        volumes:
-            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
-        restart:        ${UNIVERSAL_RESTART_POLICY}
+        working_dir:    /home/adjuftments_v2
+        command:
+            - /home/adjuftments_v2/build/wait-for-postgres.sh
+            - gunicorn --bind 0.0.0.0:5000 --workers=3 adjuftments_v2.rest_api:app
+        restart:        unless-stopped
         depends_on:
-            - database
+            - adjuftments-database
+        healthcheck:
+            test:         curl --fail -s http://localhost:5000/api/1.0/admin/health || exit 1
+            interval:     5m
+            timeout:      10s
+            retries:      3
+            start_period: 10s
         labels:
-            traefik.enable: false
-        environment:
-            FLASK_APP:          "/home/adjuftments_v2/adjuftments_v2/views.py"
-            FLASK_ENV:          "development"
-            DOCKER_ENVIRONMENT: "True"
-        working_dir:    /home/adjuftments_v2/adjuftments_v2
-        command:        flask run --host=0.0.0.0
+            # PLACING THE API BEHIND THE LOCAL TRAEFIK REVERSE PROXY
+            #   - THE API IS STILL INTERNALLY ACCESSIBLE AT LOCALHOST VIA PORT EXPOSURE
+            #   - THESE LABELS DON'T DO ANYTHING UNLESS TRAEFIK REVERSE PROXY CONFIGURED (https://github.com/juftin/traefik)
+            traefik.enable:                                                     true
+            traefik.http.routers.adjuftments-api-rtr.rule:                      Host(`${API_SUBDOMAIN}.${DOMAIN_NAME}`)
+            traefik.http.routers.adjuftments-api-rtr.service:                   adjuftments-api-svc
+            traefik.http.services.adjuftments-api-svc.loadbalancer.server.port: 5000
+            traefik.http.routers.adjuftments-api-rtr.entrypoints:               http
+            traefik.http.routers.adjuftments-api-rtr.middlewares:               chain-local-testing@file
 
     ####################################
     # ADJUFTMENTS AIRTABLE EXECUTOR
@@ -81,48 +98,56 @@ services:
         build:
             context:    ${DOCKER_DIRECTORY}/build/
             dockerfile: Dockerfile
-        networks:
-            adjuftments: null
-        volumes:
-            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
-        restart:        on-failure
-        depends_on:
-            - database
-            - webserver
-        labels:
-            traefik.enable: false
-        working_dir:    /home/adjuftments_v2/
-        command:
-            - /home/adjuftments_v2/build/wait-for-postgres.sh
-            - /home/adjuftments_v2/scripts/run_adjuftments.py
         environment:
             TZ:                 ${TZ}
             DOCKER_ENVIRONMENT: "True"
+        volumes:
+            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
+        networks:
+            adjuftments: null
+        working_dir:    /home/adjuftments_v2/adjuftments_v2
+        command:
+            - /home/adjuftments_v2/build/wait-for-postgres.sh
+            - /home/adjuftments_v2/scripts/run_adjuftments.py
+        restart:        "no"
+        depends_on:
+            - adjuftments-database
+            - adjuftments-api
+        healthcheck:
+            test:         curl --fail -s http://adjuftments-api:5000/api/1.0/admin/health || exit 1
+            interval:     5m
+            timeout:      10s
+            retries:      3
+            start_period: 10s
 
     ####################################
     # ADJUFTMENTS JOB SCHEDULER
     ####################################
 
-    job_scheduler:
-        container_name: job_scheduler
+    job-scheduler:
+        container_name: job-scheduler
         build:
             context:    ${DOCKER_DIRECTORY}/build/
             dockerfile: Dockerfile
-        networks:
-            adjuftments: null
-        volumes:
-            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
-        restart:        on-failure
-        depends_on:
-            - database
-            - webserver
-            - adjuftments
-        labels:
-            traefik.enable: false
-        working_dir:    /home/adjuftments_v2/
-        command:
-            - /home/adjuftments_v2/build/wait-for-postgres.sh
-            - /home/adjuftments_v2/scripts/run_scheduler.py
         environment:
             TZ:                 ${TZ}
             DOCKER_ENVIRONMENT: "True"
+        volumes:
+            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
+        networks:
+            adjuftments: null
+        working_dir:    /home/adjuftments_v2/adjuftments_v2
+        command:
+            - /home/adjuftments_v2/build/wait-for-postgres.sh
+            - /home/adjuftments_v2/scripts/run_scheduler.py
+        restart:        "no"
+        depends_on:
+            - adjuftments-database
+            - adjuftments-api
+            - adjuftments
+        healthcheck:
+            test:         curl --fail -s http://adjuftments-api:5000/api/1.0/admin/health || exit 1
+            interval:     5m
+            timeout:      10s
+            retries:      3
+            start_period: 10s

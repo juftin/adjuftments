@@ -6,9 +6,10 @@ from flask_login import UserMixin
 from sqlalchemy import func
 
 from adjuftments_v2.application import db
+from .utils import ModelDictionaryGenerator
 
 
-class UsersTable(UserMixin, db.Model):
+class UsersTable(UserMixin, db.Model, ModelDictionaryGenerator):
     """
     Flask Login User Object
     """
@@ -41,19 +42,3 @@ class UsersTable(UserMixin, db.Model):
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.id}>"
-
-    def to_dict(self) -> dict:
-        """
-        Return a flat dictionary with column mappings
-
-        Returns
-        -------
-        dict
-        """
-        return dict(
-            id=self.id,
-            username=self.username,
-            api_token=self.api_token,
-            created_at=self.created_at,
-            updated_at=self.updated_at
-        )
