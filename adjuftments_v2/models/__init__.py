@@ -15,7 +15,6 @@ from .categories import CategoriesTable
 from .dashboard import DashboardTable
 from .expenses import ExpensesTable
 from .historic_expenses import HistoricExpensesTable
-from .job_scheduler import JobSchedulerTable
 from .miscellaneous import MiscellaneousTable
 from .splitwise import SplitwiseTable
 from .stocks import StocksTable
@@ -28,15 +27,14 @@ ALL_TABLES: List[Model] = [
     DashboardTable,
     ExpensesTable,
     HistoricExpensesTable,
-    JobSchedulerTable,
     MiscellaneousTable,
     SplitwiseTable,
     StocksTable,
     UsersTable
 ]
-_private_data_tables = [UsersTable, JobSchedulerTable]
+# noinspection PyTypeChecker
 MODEL_FINDER: Dict[str, Model] = {table.__tablename__: table for table in
-                                  (set(ALL_TABLES) - set(_private_data_tables))}
+                                  (set(ALL_TABLES) - {UsersTable})}
 
 __all__ = [
     "BudgetsTable",
@@ -44,7 +42,6 @@ __all__ = [
     "DashboardTable",
     "ExpensesTable",
     "HistoricExpensesTable",
-    "JobSchedulerTable",
     "MiscellaneousTable",
     "SplitwiseTable",
     "StocksTable",

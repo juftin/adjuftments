@@ -941,3 +941,4 @@ class Adjuftments(object):
         """
         data_array = self._get_airtable_data(table="stocks", params=None)
         self._load_db_data(table="stocks", data_array=data_array)
+        self.refresh_stocks_data()

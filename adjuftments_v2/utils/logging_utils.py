@@ -53,7 +53,8 @@ class AdjuftmentsNotifications(logging.StreamHandler):
                         params=dict(token=AdjuftmentsNotifications.pushover_push_token,
                                     user=AdjuftmentsNotifications.pushover_push_user,
                                     message=message,
-                                    **kwargs))
+                                    **kwargs)
+                        )
         return response
 
     def emit(self, record):
@@ -67,7 +68,12 @@ class AdjuftmentsNotifications(logging.StreamHandler):
         """
         log_formatted_message = "[{:>10}]: {}".format(record.levelname.upper(),
                                                       record.msg)
-        self.send_message(message=log_formatted_message)
+        if record.levelname.upper() == "ERROR":
+            title = "Adjuftments Error Message"
+        else:
+            if record.levelname.upper() == "ERROR":
+                title = "Adjuftments Info Message"
+        self.send_message(message=log_formatted_message, title=title)
 
     @staticmethod
     def log_splitwise_expenses(splitwise_data_array: List[dict]):
@@ -96,15 +102,16 @@ class AdjuftmentsNotifications(logging.StreamHandler):
             description = f"<b>Description:</b> {splitwise_transaction['description'].title()}"
             cost = f"<b>Cost:</b> {transaction_cost}"
             amount_owed = f"<b>Amount Owed:</b> {transaction_balance}"
+            date = f"<b>Date:</b> {splitwise_transaction['date'][:10]}"
             status_dict = dict(NEW="New", UPDATE="Updated", DELETED="Deleted",
                                PAYMENT="New")
             if transaction_type == "PAYMENT":
                 message_title = f"{status_dict[transaction_type]} Splitwise Payment"
-                message_body = "\n".join([description, cost])
+                message_body = "\n".join([description, cost, date])
                 sound = "cashregister"
             else:
                 message_title = f"{status_dict[transaction_type]} Splitwise Expense"
-                message_body = "\n".join([description, cost, amount_owed])
+                message_body = "\n".join([description, cost, amount_owed, date])
                 sound = "vibrate"
             AdjuftmentsNotifications.send_message(message=message_body, title=message_title,
                                                   priority=0, sound=sound,
@@ -136,7 +143,7 @@ class AdjuftmentsNotifications(logging.StreamHandler):
             amount = f"<b>Amount:</b> {transaction_amount}"
             category = f"<b>Category:</b> {airtable_transaction['category'].title()}"
             status_dict = dict(NEW="New", UPDATE="Updated", DELETED="Deleted")
-            message_title = f"{status_dict[transaction_type]} Airtable Expense"
+            message_title = f"{status_dict[transaction_type]} Adjuftments Expense"
             message_body = "\n".join([description, amount, category, date])
             AdjuftmentsNotifications.send_message(message=message_body, title=message_title,
                                                   priority=0, sound="vibrate",
