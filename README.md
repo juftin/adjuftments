@@ -1,7 +1,6 @@
-# adjuftments
-
-<p align="left">
-  <img src="https://raw.githubusercontent.com/juftin/resume/master/resume/web/favicon.png" width="125" height="125"  alt="juftin logo">
+<p align="center">
+  <img src="docs/static/juftin.png" width="250" height="250"  alt="juftin logo">
+  <img src="docs/static/adjuftments.png" width="500" alt="adjuftments">
 </p>
 
 Adjuftments Finance Management Application
