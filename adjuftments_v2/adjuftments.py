@@ -18,8 +18,7 @@ from urllib.parse import urljoin, urlunparse
 from pytz import timezone, UTC
 from requests import delete, get, post, Response
 
-from adjuftments_v2.config import AirtableConfig
-from adjuftments_v2.config import APIEndpoints
+from adjuftments_v2.config import AirtableConfig, APIEndpoints
 from adjuftments_v2.utils import AdjuftmentsEncoder, AdjuftmentsError, AdjuftmentsNotifications
 
 logger = logging.getLogger(__name__)

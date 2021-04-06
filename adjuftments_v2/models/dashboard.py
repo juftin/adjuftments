@@ -2,8 +2,7 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
-from sqlalchemy import Column, DateTime, String
-from sqlalchemy import func
+from sqlalchemy import Column, DateTime, func, String
 
 from adjuftments_v2.application import Base
 from .utils import ModelDictionaryGenerator

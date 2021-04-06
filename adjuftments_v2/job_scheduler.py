@@ -19,8 +19,7 @@ from dotenv import load_dotenv
 from pytz import timezone
 
 from adjuftments_v2 import Adjuftments
-from adjuftments_v2.config import DOT_ENV_FILE_PATH
-from adjuftments_v2.config import FlaskDefaultConfig
+from adjuftments_v2.config import DOT_ENV_FILE_PATH, FlaskDefaultConfig
 from adjuftments_v2.plotting import AdjuftmentsPlotting
 
 load_dotenv(DOT_ENV_FILE_PATH, override=True)

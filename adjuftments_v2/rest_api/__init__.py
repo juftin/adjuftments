@@ -5,6 +5,7 @@
 """
 Adjuftments REST API Module
 """
+
 import logging
 from typing import List
 
@@ -14,10 +15,10 @@ from adjuftments_v2.application import app
 from .admin import admin
 from .airtable import airtable
 from .api_utils import load_user_from_request, shutdown_session
-from .database_endpoints import database
-from .finance_endpoints import finance
-from .images_endpoints import images
-from .splitwise_endpoints import splitwise
+from .database import database
+from .finance import finance
+from .images import images
+from .splitwise import splitwise
 
 console_handler = logging.StreamHandler()
 logging.basicConfig(format="%(asctime)s [%(levelname)8s]: %(message)s [%(name)s]",
@@ -36,4 +37,4 @@ API_BLUEPRINTS: List[Blueprint] = [
 for api_blueprint in API_BLUEPRINTS:
     app.register_blueprint(blueprint=api_blueprint)
 
-__all__ = list()  # THIS DIRECTORY IS ONLY TO BE USED AS A WSGI ENGINE, NOT IMPORTED ELSEWHERE
+__all__ = list()  # SET EVERYTHING TO PRIVATE

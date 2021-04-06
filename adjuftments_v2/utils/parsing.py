@@ -6,8 +6,7 @@
 JSON PArsing Utility for Adjuftments
 """
 
-from datetime import date, timedelta
-from datetime import datetime
+from datetime import date, datetime, timedelta
 import decimal
 from json import dumps, loads
 import logging

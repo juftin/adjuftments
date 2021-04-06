@@ -12,8 +12,7 @@ from random import shuffle
 from typing import List, Tuple, Union
 
 from pandas import DataFrame
-from splitwise import CurrentUser, Expense, Friend, SplitwiseException
-from splitwise import Splitwise as SplitwiseConn
+from splitwise import CurrentUser, Expense, Friend, Splitwise as SplitwiseConn, SplitwiseException
 from splitwise.user import ExpenseUser
 
 from adjuftments_v2.config import SplitwiseConfig

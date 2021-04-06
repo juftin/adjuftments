@@ -48,12 +48,12 @@ class DatabaseConnectionUtils(object):
         port: int
             The database port
         """
-        self.engine: Engine = self._get_engine(drivername=drivername,
-                                               username=username,
-                                               password=password,
-                                               host=host,
-                                               port=port,
-                                               database=database)
+        self.engine: Engine = self.get_engine(drivername=drivername,
+                                              username=username,
+                                              password=password,
+                                              host=host,
+                                              port=port,
+                                              database=database)
         self.database_connection: Optional[Connection] = None
         self.connected: bool = False
 
@@ -62,35 +62,6 @@ class DatabaseConnectionUtils(object):
         String Representation
         """
         return f"<DatabaseConnection: {self.engine.url.host}>"
-
-    def connect(self) -> Connection:
-        """
-        Connect to the Database
-        Returns
-        -------
-        Connection
-        """
-        if self.connected is False:
-            logger.info("Opening database connection")
-            connection = self.engine.connect()
-            self.database_connection = connection
-            self.connected = True
-            logger.info("Database Connected")
-            return connection
-
-    def disconnect(self) -> None:
-        """
-        Connect to the Database
-        Returns
-        -------
-        Connection
-        """
-        if self.connected is True:
-            logger.info("Closing database connection")
-            self.database_connection.close()
-            self.database_connection = None
-            self.connected = False
-            logger.info("Database connection closed")
 
     def execute(self, statement: str) -> ResultProxy:
         """
@@ -104,7 +75,7 @@ class DatabaseConnectionUtils(object):
         ResultProxy
         """
         if self.connected is False:
-            self.connect()
+            self._connect()
         database_response = self.database_connection.execute(statement)
         return database_response
 
@@ -169,15 +140,15 @@ class DatabaseConnectionUtils(object):
                                 host=host, port=port, database=database)
         return connection_string
 
-    @classmethod
-    def _get_engine(cls, username: str = None,
-                    password: str = None,
-                    drivername: str = None,
-                    host: str = None,
-                    database: str = None,
-                    port: int = None,
-                    keep_alive: bool = True,
-                    autocommit: bool = False) -> Engine:
+    @staticmethod
+    def get_engine(username: str = None,
+                   password: str = None,
+                   drivername: str = None,
+                   host: str = None,
+                   database: str = None,
+                   port: int = None,
+                   keep_alive: bool = True,
+                   autocommit: bool = True) -> Engine:
         """
         Get a SQLAlchemy Engine. This function defaults to inheriting parameters from
         environment variables.
@@ -209,9 +180,11 @@ class DatabaseConnectionUtils(object):
         engine: Engine
             A SQLAlchemy Engine
         """
-        connection_string = cls.get_connection_string(drivername=drivername, username=username,
-                                                      password=password, host=host, port=port,
-                                                      database=database)
+        connection_string = DatabaseConnectionUtils.get_connection_string(drivername=drivername,
+                                                                          username=username,
+                                                                          password=password,
+                                                                          host=host, port=port,
+                                                                          database=database)
         if keep_alive is True:
             keep_alive_kwargs = {"connect_args": {"keepalives": 1,
                                                   "keepalives_idle": 60,
@@ -229,3 +202,32 @@ class DatabaseConnectionUtils(object):
                                **autocommit_kwargs,
                                **keep_alive_kwargs)
         return engine
+
+    def _connect(self) -> Connection:
+        """
+        Connect to the Database
+        Returns
+        -------
+        Connection
+        """
+        if self.connected is False:
+            logger.info("Opening database connection")
+            connection = self.engine.connect()
+            self.database_connection = connection
+            self.connected = True
+            logger.info("Database Connected")
+            return connection
+
+    def _disconnect(self) -> None:
+        """
+        Connect to the Database
+        Returns
+        -------
+        Connection
+        """
+        if self.connected is True:
+            logger.info("Closing database connection")
+            self.database_connection.close()
+            self.database_connection = None
+            self.connected = False
+            logger.info("Database connection closed")
