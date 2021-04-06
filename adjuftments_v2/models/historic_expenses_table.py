@@ -5,14 +5,14 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String
 
 from adjuftments_v2.application import Base
-from .utils import ModelDictionaryGenerator
+from .utils import TableDictionaryGenerator
 
 
-class ExpensesTable(Base, ModelDictionaryGenerator):
+class HistoricExpensesTable(Base, TableDictionaryGenerator):
     """
-    Core Expenses Table
+    Extension of the Expenses Table for storing historic data
     """
-    __tablename__ = "expenses"
+    __tablename__ = "historic_expenses"
     __table_args__ = {"schema": "adjuftments"}
 
     id = Column(String(32), primary_key=True, unique=True, nullable=False, index=True)
@@ -28,7 +28,7 @@ class ExpensesTable(Base, ModelDictionaryGenerator):
     splitwise_id = Column(Integer(), ForeignKey("adjuftments.splitwise.id"),
                           nullable=True)
     created_at = Column(DateTime(timezone="UTC"), nullable=False)
-    updated_at = Column(DateTime(timezone="UTC"), nullable=False)
+    updated_at = Column(DateTime(timezone="UTC"), nullable=True)
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.id}>"

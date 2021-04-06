@@ -10,15 +10,15 @@ from typing import Dict, List
 
 from sqlalchemy import Table
 
-from .budgets import BudgetsTable
-from .categories import CategoriesTable
-from .dashboard import DashboardTable
-from .expenses import ExpensesTable
-from .historic_expenses import HistoricExpensesTable
-from .miscellaneous import MiscellaneousTable
-from .splitwise import SplitwiseTable
-from .stocks import StocksTable
-from .users import UsersTable
+from .budgets_table import BudgetsTable
+from .categories_table import CategoriesTable
+from .dashboard_table import DashboardTable
+from .expenses_table import ExpensesTable
+from .historic_expenses_table import HistoricExpensesTable
+from .miscellaneous_table import MiscellaneousTable
+from .splitwise_table import SplitwiseTable
+from .stocks_table import StocksTable
+from .users_table import UsersTable
 
 # noinspection PyTypeChecker
 ALL_TABLES: List[Table] = [

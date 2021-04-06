@@ -6,4 +6,4 @@
 Adjuftments Database Table Utilities
 """
 
-from .model_dictionary import ModelDictionaryGenerator
+from .table_dictionary import TableDictionaryGenerator

@@ -5,10 +5,10 @@
 from sqlalchemy import Boolean, Column, DateTime, Integer, Numeric, String
 
 from adjuftments_v2.application import Base
-from .utils import ModelDictionaryGenerator
+from .utils import TableDictionaryGenerator
 
 
-class SplitwiseTable(Base, ModelDictionaryGenerator):
+class SplitwiseTable(Base, TableDictionaryGenerator):
     """
     Core Splitwise Table
     """

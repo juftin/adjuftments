@@ -9,10 +9,10 @@ Budgets
 from sqlalchemy import Column, DateTime, func, Numeric, String
 
 from adjuftments_v2.application import Base
-from .utils import ModelDictionaryGenerator
+from .utils import TableDictionaryGenerator
 
 
-class BudgetsTable(Base, ModelDictionaryGenerator):
+class BudgetsTable(Base, TableDictionaryGenerator):
     """
     Core Budgets Table
     """

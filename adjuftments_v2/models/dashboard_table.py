@@ -5,10 +5,10 @@
 from sqlalchemy import Column, DateTime, func, String
 
 from adjuftments_v2.application import Base
-from .utils import ModelDictionaryGenerator
+from .utils import TableDictionaryGenerator
 
 
-class DashboardTable(Base, ModelDictionaryGenerator):
+class DashboardTable(Base, TableDictionaryGenerator):
     """
     Core Dashboard Table
     """

@@ -6,10 +6,10 @@ from flask_login import UserMixin
 from sqlalchemy import Column, DateTime, func, Integer, String
 
 from adjuftments_v2.application import Base
-from .utils import ModelDictionaryGenerator
+from .utils import TableDictionaryGenerator
 
 
-class UsersTable(UserMixin, Base, ModelDictionaryGenerator):
+class UsersTable(UserMixin, Base, TableDictionaryGenerator):
     """
     Flask Login User Object
     """

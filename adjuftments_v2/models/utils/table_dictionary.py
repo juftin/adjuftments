@@ -8,14 +8,16 @@ Adjuftments Model Extension Class
 
 from typing import Dict
 
+from sqlalchemy import Column, Table
 
-class ModelDictionaryGenerator(object):
+
+class TableDictionaryGenerator(object):
     """
     Basic Class to Convert Database Tables to Dictionaries. This class
     only has a single function that it extends onto Table classes: to_dict()
     """
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self: Table) -> Dict[str, Column]:
         """
         Return a flat dictionary with column mappings
 
