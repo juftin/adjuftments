@@ -8,7 +8,7 @@ Adjuftments Flask-SQLAlchemy Models
 
 from typing import Dict, List
 
-from flask_sqlalchemy import Model
+from sqlalchemy import Table
 
 from .budgets import BudgetsTable
 from .categories import CategoriesTable
@@ -21,7 +21,7 @@ from .stocks import StocksTable
 from .users import UsersTable
 
 # noinspection PyTypeChecker
-ALL_TABLES: List[Model] = [
+ALL_TABLES: List[Table] = [
     BudgetsTable,
     CategoriesTable,
     DashboardTable,
@@ -32,9 +32,12 @@ ALL_TABLES: List[Model] = [
     StocksTable,
     UsersTable
 ]
+
+# PRIVATE TABLES NOT TO EXPOSE USING MODEL_FINDER
+PRIVATE_TABLES: str = {UsersTable}
 # noinspection PyTypeChecker
-MODEL_FINDER: Dict[str, Model] = {table.__tablename__: table for table in
-                                  (set(ALL_TABLES) - {UsersTable})}
+MODEL_FINDER: Dict[str, Table] = {table.__tablename__: table for table in
+                                  (set(ALL_TABLES) - PRIVATE_TABLES)}
 
 __all__ = [
     "BudgetsTable",
@@ -46,5 +49,6 @@ __all__ = [
     "SplitwiseTable",
     "StocksTable",
     "UsersTable",
-    "MODEL_FINDER"
+    "MODEL_FINDER",
+    "ALL_TABLES"
 ]

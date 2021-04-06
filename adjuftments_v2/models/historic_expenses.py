@@ -2,31 +2,33 @@
 
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
-from adjuftments_v2.application import db
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String
+
+from adjuftments_v2.application import Base
 from .utils import ModelDictionaryGenerator
 
 
-class HistoricExpensesTable(db.Model, ModelDictionaryGenerator):
+class HistoricExpensesTable(Base, ModelDictionaryGenerator):
     """
     Extension of the Expenses Table for storing historic data
     """
     __tablename__ = "historic_expenses"
     __table_args__ = {"schema": "adjuftments"}
 
-    id = db.Column(db.String(32), primary_key=True, unique=True, nullable=False, index=True)
-    date = db.Column(db.DateTime(timezone="UTC"), nullable=False)
-    amount = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
-    transaction = db.Column(db.String(512), nullable=False)
-    category = db.Column(db.String(32), nullable=False)
-    imported = db.Column(db.Boolean, default=False, nullable=False)
-    imported_at = db.Column(db.DateTime(timezone="UTC"), nullable=True)
-    splitwise = db.Column(db.Boolean, default=False, nullable=False)
-    delete = db.Column(db.Boolean, default=False, nullable=False)
-    uuid = db.Column(db.String(128), nullable=True)
-    splitwise_id = db.Column(db.Integer(), db.ForeignKey("adjuftments.splitwise.id"),
-                             nullable=True)
-    created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False)
-    updated_at = db.Column(db.DateTime(timezone="UTC"), nullable=True)
+    id = Column(String(32), primary_key=True, unique=True, nullable=False, index=True)
+    date = Column(DateTime(timezone="UTC"), nullable=False)
+    amount = Column(Numeric(10, 2), default=0.00, nullable=False)
+    transaction = Column(String(512), nullable=False)
+    category = Column(String(32), nullable=False)
+    imported = Column(Boolean, default=False, nullable=False)
+    imported_at = Column(DateTime(timezone="UTC"), nullable=True)
+    splitwise = Column(Boolean, default=False, nullable=False)
+    delete = Column(Boolean, default=False, nullable=False)
+    uuid = Column(String(128), nullable=True)
+    splitwise_id = Column(Integer(), ForeignKey("adjuftments.splitwise.id"),
+                          nullable=True)
+    created_at = Column(DateTime(timezone="UTC"), nullable=False)
+    updated_at = Column(DateTime(timezone="UTC"), nullable=True)
 
     def __repr__(self):
         return f"<{self.__tablename__}: {self.id}>"

@@ -3,27 +3,27 @@
 # Author::    Justin Flannery  (mailto:juftin@juftin.com)
 
 from flask_login import UserMixin
-from sqlalchemy import func
+from sqlalchemy import Column, DateTime, func, Integer, String
 
-from adjuftments_v2.application import db
+from adjuftments_v2.application import Base
 from .utils import ModelDictionaryGenerator
 
 
-class UsersTable(UserMixin, db.Model, ModelDictionaryGenerator):
+class UsersTable(UserMixin, Base, ModelDictionaryGenerator):
     """
     Flask Login User Object
     """
     __tablename__ = "users"
     __table_args__ = {"schema": "adjuftments"}
 
-    id = db.Column(db.Integer(), primary_key=True, unique=True, nullable=False, autoincrement=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
-    api_token = db.Column(db.String(128), nullable=True, index=True)
-    created_at = db.Column(db.DateTime(timezone="UTC"), nullable=False,
-                           server_default=func.now(timezone="utc"))
-    updated_at = db.Column(db.DateTime(timezone="UTC"), nullable=False,
-                           server_default=func.now(timezone="utc"),
-                           onupdate=func.now(timezone="utc"))
+    id = Column(Integer(), primary_key=True, unique=True, nullable=False, autoincrement=True)
+    username = Column(String(64), unique=True, nullable=False)
+    api_token = Column(String(128), nullable=True, index=True)
+    created_at = Column(DateTime(timezone="UTC"), nullable=False,
+                        server_default=func.now(timezone="utc"))
+    updated_at = Column(DateTime(timezone="UTC"), nullable=False,
+                        server_default=func.now(timezone="utc"),
+                        onupdate=func.now(timezone="utc"))
 
     def set_api_token(self, api_token: str):
         """

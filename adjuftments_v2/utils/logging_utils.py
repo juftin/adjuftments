@@ -99,7 +99,7 @@ class AdjuftmentsNotifications(logging.StreamHandler):
                 amount=splitwise_transaction['transaction_balance'],
                 float_format='money')
 
-            description = f"<b>Description:</b> {splitwise_transaction['description'].title()}"
+            description = f"<b>Description:</b> {splitwise_transaction['description']}"
             cost = f"<b>Cost:</b> {transaction_cost}"
             amount_owed = f"<b>Amount Owed:</b> {transaction_balance}"
             date = f"<b>Date:</b> {splitwise_transaction['date'][:10]}"
@@ -141,7 +141,7 @@ class AdjuftmentsNotifications(logging.StreamHandler):
             date = f"<b>Date:</b> {airtable_transaction['date'][:10]}"
             description = f"<b>Transaction:</b> {airtable_transaction['transaction']}"
             amount = f"<b>Amount:</b> {transaction_amount}"
-            category = f"<b>Category:</b> {airtable_transaction['category'].title()}"
+            category = f"<b>Category:</b> {airtable_transaction['category']}"
             status_dict = dict(NEW="New", UPDATE="Updated", DELETED="Deleted")
             message_title = f"{status_dict[transaction_type]} Adjuftments Expense"
             message_body = "\n".join([description, amount, category, date])

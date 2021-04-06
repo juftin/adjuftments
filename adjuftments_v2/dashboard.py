@@ -15,7 +15,7 @@ from dateutil.relativedelta import relativedelta
 from numpy import where
 from pandas import DataFrame, Series
 
-from adjuftments_v2.application import db
+from adjuftments_v2.application import db_session
 from adjuftments_v2.config import DashboardConfig
 from adjuftments_v2.models import BudgetsTable, DashboardTable, ExpensesTable, MiscellaneousTable
 from adjuftments_v2.utils import AdjuftmentsEncoder
@@ -734,7 +734,7 @@ class Dashboard(object):
                                                   value=update_manifest["value"])
             else:
                 record_to_update.value = update_manifest["value"]
-            db.session.merge(record_to_update)
+            db_session.merge(record_to_update)
             logger.info(
                 f"Updating Dashboard: {record_to_update.measure} - {record_to_update.value}")
-            db.session.commit()
+            db_session.commit()

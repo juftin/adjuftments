@@ -31,7 +31,7 @@ class FlaskDefaultConfig(object):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    DRIVERNAME = "postgresql"
+    DRIVERNAME = "postgresql+psycopg2"
     DATABASE_USERNAME = environ["DATABASE_USER"]
     DATABASE_PASSWORD = environ["DATABASE_PASSWORD"]
 
@@ -59,7 +59,7 @@ class FlaskTestingConfig(FlaskDefaultConfig):
     Default Config + PostgreSQL Database Connection
     """
     config_dir = Path(abspath(__file__)).parent
-    SQLALCHEMY_DATABASE_URI = f"sqlite:////{config_dir}/sqlite.db"
+    SQLALCHEMY_DATABASE_URI = "sqlite:////{config_dir}/sqlite.db"
 
 
 class APIEndpoints(object):
@@ -82,13 +82,16 @@ class APIEndpoints(object):
     AIRTABLE_DASHBOARD: str = f"{AIRTABLE_BASE}/dashboard"
     AIRTABLE_EXPENSE: str = f"{AIRTABLE_BASE}/expenses"
     AIRTABLE_MISCELLANEOUS: str = f"{AIRTABLE_BASE}/budgets"
+
     SPLITWISE_EXPENSES: str = f"{SPLITWISE_BASE}/expenses"
     SPLITWISE_BALANCE: str = f"{SPLITWISE_BASE}/balance"
     SPLITWISE_UPDATED_AT: str = f"{SPLITWISE_BASE}/timestamp"
+
     STOCK_TICKER_API: str = f"{FINANCE_BASE}/stocks"
     DASHBOARD_GENERATOR: str = f"{FINANCE_BASE}/dashboard"
+    EXPENSE_CATEGORIES: str = f"{FINANCE_BASE}/categories"
+    IMAGES_ENDPOINT: str = f"{FINANCE_BASE}/images"
+
     ADMIN_DATABASE_BUILD: str = f"{ADMIN_BASE}/build"
     ADMIN_USERS: str = f"{ADMIN_BASE}/users"
-    EXPENSE_CATEGORIES = f"{FINANCE_BASE}/categories"
-    IMAGES_ENDPOINT = f"{FINANCE_BASE}/images"
     HEALTHCHECK: str = f"{ADMIN_BASE}/health"

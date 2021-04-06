@@ -25,8 +25,6 @@ from adjuftments_v2.plotting import AdjuftmentsPlotting
 
 load_dotenv(DOT_ENV_FILE_PATH, override=True)
 logger = logging.getLogger(__name__)
-ap_scheduler_logger = logging.getLogger("apscheduler")
-ap_scheduler_logger.setLevel(logging.DEBUG)
 
 
 class AdjuftmentsScheduler(object):
@@ -42,7 +40,7 @@ class AdjuftmentsScheduler(object):
         # A LIGHTWEIGHT SCHEDULER
         self.scheduler = BlockingScheduler(
             jobstores=dict(default=MemoryJobStore()),
-            executors=dict(default=ThreadPoolExecutor(max_workers=2)),
+            executors=dict(default=ThreadPoolExecutor(max_workers=1)),
             job_defaults=dict(coalesce=False, max_instances=2),
             timezone=self.local_timezone)
         self.adjuftments = Adjuftments(endpoint=FlaskDefaultConfig.API_ENDPOINT,
@@ -58,7 +56,8 @@ class AdjuftmentsScheduler(object):
                                                 minute="0/5",
                                                 timezone=timezone("US/Eastern")),
                                     CronTrigger(hour="5",
-                                                minute="0")])
+                                                minute="0",
+                                                timezone=self.local_timezone)])
         self.scheduler.add_job(func=self.adjuftments.refresh_stocks_data,
                                id="refresh_stocks_data",
                                name="Refresh Stocks Data",

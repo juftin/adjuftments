@@ -67,14 +67,15 @@ services:
             - "5000:5000"
         working_dir:    /home/adjuftments_v2
         command:
-            - /home/adjuftments_v2/build/wait-for-postgres.sh
-            - gunicorn --bind 0.0.0.0:5000 --workers=3 adjuftments_v2.rest_api:app
+            - /home/adjuftments_v2/scripts/database_setup.sh
+            - gunicorn --bind 0.0.0.0:5000 --workers=2 ${WSGI_APPLICATION} # PRODUCTION
+            # - flask run --host=0.0.0.0 # API TESTING
         restart:        unless-stopped
         depends_on:
             - database
         healthcheck:
-            test:         curl --fail -s http://localhost:5000/api/1.0/admin/health || exit 1
-            interval:     5m
+            test:         curl --fail -s http://${ADJUFTMENTS_API_HOST}:5000/api/1.0/admin/health || exit 1
+            interval:     1m
             timeout:      10s
             retries:      3
             start_period: 10s
@@ -107,25 +108,19 @@ services:
             adjuftments: null
         working_dir:    /home/adjuftments_v2/adjuftments_v2
         command:
-            - /home/adjuftments_v2/build/wait-for-postgres.sh
+            - /home/adjuftments_v2/scripts/wait-for-api.sh
             - /home/adjuftments_v2/scripts/run_adjuftments.py
         restart:        "no"
         depends_on:
             - database
             - api
-        healthcheck:
-            test:         curl --fail -s http://api:5000/api/1.0/admin/health || exit 1
-            interval:     5m
-            timeout:      10s
-            retries:      3
-            start_period: 10s
 
     ####################################
     # ADJUFTMENTS JOB SCHEDULER
     ####################################
 
     job-scheduler:
-        container_name: job-scheduler
+        container_name: adjuftments-job-scheduler
         build:
             context:    ${DOCKER_DIRECTORY}/build/
             dockerfile: Dockerfile
@@ -138,16 +133,10 @@ services:
             adjuftments: null
         working_dir:    /home/adjuftments_v2/adjuftments_v2
         command:
-            - /home/adjuftments_v2/build/wait-for-postgres.sh
+            - /home/adjuftments_v2/scripts/wait-for-api.sh
             - /home/adjuftments_v2/scripts/run_scheduler.py
         restart:        "no"
         depends_on:
             - database
             - api
             - adjuftments
-        healthcheck:
-            test:         curl --fail -s http://adjuftments-api:5000/api/1.0/admin/health || exit 1
-            interval:     5m
-            timeout:      10s
-            retries:      3
-            start_period: 10s

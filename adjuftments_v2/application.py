@@ -10,7 +10,9 @@ import logging
 
 from flask import Flask
 from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from adjuftments_v2.config import FlaskDefaultConfig
 from adjuftments_v2.utils import AdjuftmentsEncoder
@@ -24,4 +26,9 @@ app.json_encoder = AdjuftmentsEncoder
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-db = SQLAlchemy(app=app)
+engine = create_engine(FlaskDefaultConfig.SQLALCHEMY_DATABASE_URI)
+db_session = scoped_session(sessionmaker(autocommit=False,
+                                         autoflush=False,
+                                         bind=engine))
+Base = declarative_base()
+Base.query = db_session.query_property()
