@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 from requests import post, Response
 
 from adjuftments_v2.config import DOT_ENV_FILE_PATH
-from .parsing import AdjuftmentsEncoder
+from .parsing_utils import AdjuftmentsEncoder
 
 load_dotenv(DOT_ENV_FILE_PATH, override=True)
 logger = logging.getLogger(__name__)

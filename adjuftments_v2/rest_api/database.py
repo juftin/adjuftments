@@ -17,7 +17,7 @@ from sqlalchemy import func, Table
 
 from adjuftments_v2.application import db_session
 from adjuftments_v2.config import APIEndpoints, DOT_ENV_FILE_PATH
-from adjuftments_v2.models import MODEL_FINDER
+from adjuftments_v2.schema import TABLE_FINDER
 
 load_dotenv(DOT_ENV_FILE_PATH, override=True)
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def interact_with_adjuftments_table(table: str) -> Response:
     -------
 
     """
-    adjuftments_table = MODEL_FINDER.get(table, None)
+    adjuftments_table = TABLE_FINDER.get(table, None)
     if adjuftments_table is None:
         abort(status=500,
               description=("Adjuftments table does not exist or "
@@ -83,7 +83,7 @@ def interact_with_adjuftments_record(table: str, key: Union[str, int]) -> Respon
     -------
 
     """
-    adjuftments_table = MODEL_FINDER.get(table, None)
+    adjuftments_table = TABLE_FINDER.get(table, None)
     if adjuftments_table is None:
         abort(status=500,
               description=("Adjuftments table does not exist or "
@@ -146,7 +146,7 @@ def get_max_date_from_table(table: str, date_column: str) -> datetime:
     -------
     datetime
     """
-    database_table = MODEL_FINDER.get(table, None)
+    database_table = TABLE_FINDER.get(table, None)
     if database_table is None:
         abort(status=500, description=f"Table doesn't exist: {table}")
     database_column = getattr(database_table, date_column)

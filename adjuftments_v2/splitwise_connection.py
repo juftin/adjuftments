@@ -16,7 +16,7 @@ from splitwise import CurrentUser, Expense, Friend, Splitwise as SplitwiseConn, 
 from splitwise.user import ExpenseUser
 
 from adjuftments_v2.config import SplitwiseConfig
-from adjuftments_v2.models import SplitwiseTable
+from adjuftments_v2.schema import SplitwiseTable
 
 logger = logging.getLogger(__name__)
 

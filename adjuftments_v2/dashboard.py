@@ -17,7 +17,7 @@ from pandas import DataFrame, Series
 
 from adjuftments_v2.application import db_session
 from adjuftments_v2.config import DashboardConfig
-from adjuftments_v2.models import BudgetsTable, DashboardTable, ExpensesTable, MiscellaneousTable
+from adjuftments_v2.schema import BudgetsTable, DashboardTable, ExpensesTable, MiscellaneousTable
 from adjuftments_v2.utils import AdjuftmentsEncoder
 
 logger = logging.getLogger(__name__)

@@ -33,10 +33,10 @@ ALL_TABLES: List[Table] = [
     UsersTable
 ]
 
-# PRIVATE TABLES NOT TO EXPOSE USING MODEL_FINDER
+# PRIVATE TABLES NOT TO EXPOSE USING TABLE_FINDER
 PRIVATE_TABLES: str = {UsersTable}
 # noinspection PyTypeChecker
-MODEL_FINDER: Dict[str, Table] = {table.__tablename__: table for table in
+TABLE_FINDER: Dict[str, Table] = {table.__tablename__: table for table in
                                   (set(ALL_TABLES) - PRIVATE_TABLES)}
 
 __all__ = [
@@ -49,6 +49,6 @@ __all__ = [
     "SplitwiseTable",
     "StocksTable",
     "UsersTable",
-    "MODEL_FINDER",
+    "TABLE_FINDER",
     "ALL_TABLES"
 ]

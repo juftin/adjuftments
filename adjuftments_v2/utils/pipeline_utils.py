@@ -12,7 +12,7 @@ from sys import exc_info
 from time import sleep
 from typing import Callable, List, Optional
 
-from .errors import AdjuftmentsRefreshError
+from .error_utils import AdjuftmentsRefreshError
 
 logger = logging.getLogger(__name__)
 

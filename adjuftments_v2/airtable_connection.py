@@ -13,7 +13,7 @@ from airtable import Airtable as AirtablePythonWrapper
 from pandas import DataFrame
 
 from adjuftments_v2.config import AirtableColumnMapping, AirtableConfig
-from adjuftments_v2.models import (BudgetsTable, CategoriesTable,
+from adjuftments_v2.schema import (BudgetsTable, CategoriesTable,
                                    DashboardTable, ExpensesTable,
                                    MiscellaneousTable)
 

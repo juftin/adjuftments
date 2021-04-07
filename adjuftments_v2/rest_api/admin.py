@@ -16,7 +16,7 @@ from sqlalchemy.sql.ddl import CreateSchema
 
 from adjuftments_v2.application import Base, db_session, engine
 from adjuftments_v2.config import APIEndpoints, DOT_ENV_FILE_PATH, FlaskDefaultConfig
-from adjuftments_v2.models import UsersTable
+from adjuftments_v2.schema import UsersTable
 
 load_dotenv(DOT_ENV_FILE_PATH, override=True)
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def prepare_database() -> Response:
     Refresh Adjuftments Dashboard
     """
 
-    from adjuftments_v2.models import ALL_TABLES
+    from adjuftments_v2.schema import ALL_TABLES
     logger.info(f"Preparing Database: {len(ALL_TABLES)} table(s)")
     if not engine.dialect.has_schema(engine, "adjuftments"):
         engine.execute(CreateSchema("adjuftments"))

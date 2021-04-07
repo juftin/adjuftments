@@ -22,7 +22,7 @@ from sqlalchemy import Table
 from adjuftments_v2 import Airtable, Dashboard
 from adjuftments_v2.application import app
 from adjuftments_v2.config import AirtableConfig, APIEndpoints, DOT_ENV_FILE_PATH
-from adjuftments_v2.models import DashboardTable, ExpensesTable
+from adjuftments_v2.schema import DashboardTable, ExpensesTable
 from adjuftments_v2.utils import AdjuftmentsEncoder
 
 load_dotenv(DOT_ENV_FILE_PATH, override=True)

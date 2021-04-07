@@ -10,7 +10,11 @@ goal of `adjuftments` is to be mindful of spending, and to plan around maximizin
 of each month. So what makes `adjuftments` different from your Excel spreadsheet? Mainly,
 `adjuftments` is built on top of `splitwise` and `airtable`, which helps it do some pretty cool
 stuff. Secondly, at any given point during the month you can compare your spending with where you
-planned to be, `adjuftments` will help you save money.
+planned to be, `adjuftments` will help you save money. Lastly, `adjuftments` has a few other handy
+features including monthly spending categorization, stock portfolio price syncing, handy
+visualizations, and helpful push notifications built on `pushover`.
+
+## What's under the hood?
 
 `adjuftments` has been a personal project of mine for the past few years. It started out as a Google
 Sheet with some painful VLOOKUP functions built into it. Today, `adjuftments` is a multi-container
@@ -20,12 +24,13 @@ docker application that consists of a few components and services:
     - The backend of `adjuftments` is a PostgreSQL database that stays in-sync with the data
       residing in `airtable`. The underlying schema and data structure is built with
       the [SQLAlchemy](https://www.sqlalchemy.org/)
-      using the Declarative Base method.
+      using the Declarative Base method. These are financial records, so the database is self
+      hosted. Data is also persisted inside of `airtable` as well.
 - REST API
     - There are no services that connect to the PostgreSQL backend apart from the REST API. This
-      REST API is built on top of [flask](https://flask.palletsprojects.com/), requires
+      REST API is built on top of [Flask](https://flask.palletsprojects.com/), requires
       authorization using an API token embedded in headers, and uses Gunicorn as the underlying WSGI
-      server.
+      Engine with multiple workers.
 - API Python Wrapper
     - To access the REST API, a Python Wrapper was built around it with
       the [requests](https://docs.python-requests.org/) module. The primary data refresh service is
@@ -57,9 +62,9 @@ inside of `splitwise`. Your ongoing balance with your financial partner is also 
 ## How do I set up `adjuftments` for myself?
 
 `adjuftments` set up is relatively straightforward. All credentials are set using
-a [`.env`](example.env) file. Inside of this `.env` file you will store information like your
-timezone, local directory path, and API credentials to the various services `adjuftments` integrates
-with:
+a [`.env`](example.env) file. Inside of this `.env`
+file you will store information like your timezone, local directory path, and API credentials to the
+various services `adjuftments` integrates with:
 
 - `airtable`: frontend and data management
 - `splitwise`: expense sharing integration

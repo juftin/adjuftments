@@ -17,7 +17,7 @@ from sqlalchemy import Table
 
 from adjuftments_v2.application import app, db_session, login_manager
 from adjuftments_v2.config import DOT_ENV_FILE_PATH, FlaskDefaultConfig
-from adjuftments_v2.models import UsersTable
+from adjuftments_v2.schema import UsersTable
 
 load_dotenv(DOT_ENV_FILE_PATH, override=True)
 logger = logging.getLogger(__name__)
