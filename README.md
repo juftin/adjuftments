@@ -12,6 +12,32 @@ given point during the month you can compare your spending with where you planne
 `adjuftments` is built on top of `splitwise` and `airtable`, which helps it do some pretty cool
 stuff.
 
+`adjuftments` has been a personal project of mine for the past few years. It started out as a Google
+Sheet with some painful VLOOKUP functions built into it. Today, `adjuftments` is a multi-container
+docker application that consists of a few components and services:
+
+- PostgreSQL Database
+    - The backend of `adjuftments` is a PostgreSQL database that stays in-sync with the data
+      residing in `airtable`. The underlying schema and data structure is built with
+      the [SQLAlchemy](https://www.sqlalchemy.org/)
+      using the Declarative Base method.
+- REST API
+    - There are no services that connect to the PostgreSQL backend apart from the REST API. This
+      REST API is built on top of [flask](https://flask.palletsprojects.com/), requires
+      authorization using an API token embedded in headers, and uses Gunicorn as the underlying WSGI
+      server.
+- API Python Wrapper
+    - To access the REST API, a Python Wrapper was built around it with
+      the [requests](https://docs.python-requests.org/) module. The primary data refresh service is
+      built around this wrapper. This service checks for new/updated data from `airtable`
+      and `splitwise` and publishes the latest aggregate dashboard which tracks things like monthly
+      spending, bank account balances, and projected savings.
+- Job Scheduler
+    - Also using the REST API wrapper, `adjuftments` has a job scheduling service that performs
+      scheduled tasks like updating stock prices, refreshing published images, performing
+      maintenance on the database, etc. These tasks are scheduled as using
+      the [APScheduler](https://apscheduler.readthedocs.io/en/stable/) service.
+
 ## How does `adjuftments` integrate with `airtable`?
 
 `adjuftments` is built on top of airtable, every expense that you import into the application is
@@ -41,7 +67,12 @@ with:
 - `pushover`: mobile push notifications
 
 More details on the initial setup can be found in
-the [documentation](docs/configuration/initial_setup.md).
+the [documentation](docs/configuration/initial_setup.md). Once the `.env` file has been configured,
+the entire project
+
+## This seems like an awful lot of trouble to keep track of expenses
+
+Nope.
 
 * * *
 
