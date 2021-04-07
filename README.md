@@ -7,10 +7,10 @@
 
 `adjuftments` is a financial application that tracks expenses, income, and more. Ultimately, the
 goal of `adjuftments` is to be mindful of spending, and to plan around maximizing savings at the end
-of each month. So what makes `adjuftments` different than your Excel spreadsheet? Mainly, at any
-given point during the month you can compare your spending with where you planned to be. Secondly,
+of each month. So what makes `adjuftments` different from your Excel spreadsheet? Mainly,
 `adjuftments` is built on top of `splitwise` and `airtable`, which helps it do some pretty cool
-stuff.
+stuff. Secondly, at any given point during the month you can compare your spending with where you
+planned to be, `adjuftments` will help you save money.
 
 `adjuftments` has been a personal project of mine for the past few years. It started out as a Google
 Sheet with some painful VLOOKUP functions built into it. Today, `adjuftments` is a multi-container
