@@ -11,7 +11,7 @@ from os import getenv
 
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.combining import OrTrigger
 from apscheduler.triggers.cron import CronTrigger
 from dateutil.tz import tzlocal
@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 from pytz import timezone
 
 from adjuftments_v2 import Adjuftments
-from adjuftments_v2.config import DOT_ENV_FILE_PATH, FlaskDefaultConfig
+from adjuftments_v2.config import DOT_ENV_FILE_PATH
 from adjuftments_v2.plotting import AdjuftmentsPlotting
 
 load_dotenv(DOT_ENV_FILE_PATH, override=True)
@@ -31,21 +31,19 @@ class AdjuftmentsScheduler(object):
     Scheduling!
     """
 
-    def __init__(self):
+    def __init__(self, adjuftments: Adjuftments):
         """
         Initialize!
         """
         self.local_timezone = timezone(getenv("TZ", default=tzlocal()))
         # A LIGHTWEIGHT SCHEDULER
-        self.scheduler = BlockingScheduler(
+        self.scheduler = BackgroundScheduler(
             jobstores=dict(default=MemoryJobStore()),
             executors=dict(default=ThreadPoolExecutor(max_workers=1)),
             job_defaults=dict(coalesce=False, max_instances=2),
             timezone=self.local_timezone)
-        self.adjuftments = Adjuftments(endpoint=FlaskDefaultConfig.API_ENDPOINT,
-                                       api_token=FlaskDefaultConfig.API_TOKEN,
-                                       https=False, port=5000)
-        self.adjuftments_plotting = AdjuftmentsPlotting()
+        self.adjuftments: Adjuftments = adjuftments
+        self.adjuftments_plotting = AdjuftmentsPlotting(adjuftments=self.adjuftments)
 
     # noinspection PyProtectedMember
     def build_scheduler(self):

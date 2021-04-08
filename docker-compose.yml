@@ -119,24 +119,24 @@ services:
     # ADJUFTMENTS JOB SCHEDULER
     ####################################
 
-    job-scheduler:
-        container_name: adjuftments-job-scheduler
-        build:
-            context:    ${DOCKER_DIRECTORY}/build/
-            dockerfile: Dockerfile
-        environment:
-            TZ:                 ${TZ}
-            DOCKER_ENVIRONMENT: "True"
-        volumes:
-            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
-        networks:
-            adjuftments: null
-        working_dir:    /home/adjuftments_v2/adjuftments_v2
-        command:
-            - /home/adjuftments_v2/scripts/wait-for-api.sh
-            - /home/adjuftments_v2/scripts/run_scheduler.py
-        restart:        "no"
-        depends_on:
-            - database
-            - api
-            - adjuftments
+#    job-scheduler:
+#        container_name: adjuftments-job-scheduler
+#        build:
+#            context:    ${DOCKER_DIRECTORY}/build/
+#            dockerfile: Dockerfile
+#        environment:
+#            TZ:                 ${TZ}
+#            DOCKER_ENVIRONMENT: "True"
+#        volumes:
+#            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
+#        networks:
+#            adjuftments: null
+#        working_dir:    /home/adjuftments_v2/adjuftments_v2
+#        command:
+#            - /home/adjuftments_v2/scripts/wait-for-api.sh
+#            - /home/adjuftments_v2/scripts/run_scheduler.py
+#        restart:        "no"
+#        depends_on:
+#            - database
+#            - api
+#            - adjuftments

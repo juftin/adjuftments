@@ -26,7 +26,10 @@ recommendation is to save the URL and add it to your home screen using
 
 ## Entering Expenses
 
-Entering expenses into Adjuftments is pretty straightforward, with a few tips and tricks.
+Entering expenses into Adjuftments is pretty straightforward, with a few tips and tricks. Once you
+submit an expense through the form, `adjuftments` picks up the expense, loads it in the database and
+marks it as `imported` inside of `airtable`.
+
 Essentially every entry besides a few categories (`Rent`, `Mortgage`, `Savings`, `Savings Spend`
 , `Income`, `Interest`, `Adjustment`) is considered to be an expense. Creating these expenses is
 straightforward. Submitting expenses into these other categories can take some getting used to.
@@ -78,3 +81,21 @@ Let's begin with some common examples:
       your actual account balance is different from what `adjuftments` is telling you? Use the
       category `Adjustmnent` to create a transaction that will change your account balance but not
       affect your monthly budgeting.
+
+## Updating Expenses
+
+Updating expenses is also easy. Just make the changes you need inside of the record in `airtable`
+and mark it as un-imported (uncheck the `imported` box). It will be picked up, updated, and marked
+as imported soon.
+
+## Updating Splitwise Expenses
+
+If you need to update the amount on a Splitwise expense, update it in Splitwise. Adjuftments doesn't
+currently perform updates inside of splitwise, just record creations and deletions
+
+## Deleting Expenses
+
+To delete an expense, mark it as `Deleted` in `airtable` (check the `deleted` box). It will be
+picked up, and deleted shortly. Splitwise expenses can be deleted inside of `splitwise`. When
+an `airtable` record is deleted with a linked `splitwise` expense, that expense is also deleted
+inside of `splitwise`

@@ -859,10 +859,10 @@ class Adjuftments(object):
         Set up the Database with original users
         """
         api_endpoint = urljoin(self.endpoint, APIEndpoints.ADMIN_USERS)
-        juftin_user = post(url=api_endpoint, headers=None,
-                           json={"clean_start": True})
-        assert juftin_user.status_code == 200
-        return juftin_user
+        admin_user = post(url=api_endpoint, headers=None,
+                          json={"clean_start": True})
+        assert admin_user.status_code == 200
+        return admin_user
 
     def _clean_start_expenses_data(self):
         """

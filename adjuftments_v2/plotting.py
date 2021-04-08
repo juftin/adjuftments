@@ -16,7 +16,7 @@ import plotly.express as px
 from plotly.graph_objs import Figure
 
 from adjuftments_v2 import Adjuftments, Airtable, Dashboard
-from adjuftments_v2.config import AirtableConfig, FlaskDefaultConfig
+from adjuftments_v2.config import AirtableConfig
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +26,14 @@ class AdjuftmentsPlotting(object):
     The Plotting Class
     """
 
-    def __init__(self):
+    def __init__(self, adjuftments: Adjuftments):
         """
         Set the internal properties
         """
         _current_year = datetime.now().year
         self.historic_bases = AirtableConfig.HISTORIC_BASES.copy()
         self.historic_bases[str(_current_year)] = AirtableConfig.AIRTABLE_BASE
-        self.adjuftments = Adjuftments(endpoint=FlaskDefaultConfig.API_ENDPOINT,
-                                       api_token=FlaskDefaultConfig.API_TOKEN)
+        self.adjuftments: Adjuftments = adjuftments
 
     def refresh_images(self) -> None:
         """
