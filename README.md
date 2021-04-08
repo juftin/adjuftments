@@ -14,6 +14,39 @@ planned to be, `adjuftments` will help you save money. Lastly, `adjuftments` has
 features including monthly spending categorization, stock portfolio price syncing, handy
 visualizations, and helpful push notifications built on `pushover`.
 
+## How do I set up `adjuftments` for myself?
+
+`adjuftments` set up is relatively straightforward. All credentials are set using
+a [`.env`](example.env) file. Inside of this `.env`
+file you will store information like your timezone, local directory path, and API credentials to the
+various services `adjuftments` integrates with:
+
+- `airtable`: frontend and data management
+- `splitwise`: expense sharing integration
+- `imgur`: temporary image hosting intermediary
+- `pushover`: mobile push notifications
+
+More details on the initial setup can be found in
+the [configuration documentation](docs/configuration/initial_setup.md). Once the `.env` file has
+been configured, the entire project is ready to run. Need help understanding how to actually submit
+new transactions? Check out the [usage documentation](docs/usage/expense_entry.md).
+
+## How does `adjuftments` integrate with `airtable`?
+
+`adjuftments` is built on top of airtable, every expense that you import into the application is
+actually a record inside of `airtable`. This allows a couple of cool things:
+
+- Record Access: At any time you can go back and modify, delete, or create historic expenses.
+  `airtable` has mobile apps, and a responsive WebUI that makes data management easy.
+- Record Entry: Creating new expenses is really easy using `airtable`'s native form functionality.
+
+## How does `adjuftments` integrate with `splitwise`?
+
+`adjuftments` performs a two way sync with records in `splitwise`. This means that after you
+designate a financial partner (a friend in Splitwise and someone who you share expenses with), you
+can create Splitwise expenses directly from `adjuftments`, and also auto sync with expenses created
+inside of `splitwise`. Your ongoing balance with your financial partner is also tracked.
+
 ## What's under the hood?
 
 `adjuftments` has been a personal project of mine for the past few years. It started out as a Google
@@ -43,41 +76,13 @@ docker application that consists of a few components and services:
       maintenance on the database, etc. These tasks are scheduled as using
       the [APScheduler](https://apscheduler.readthedocs.io/en/stable/) service.
 
-## How does `adjuftments` integrate with `airtable`?
+## This seems like an awful lot of trouble to keep track of expenses. Isn't a spreadsheet better?
 
-`adjuftments` is built on top of airtable, every expense that you import into the application is
-actually a record inside of `airtable`. This allows a couple of cool things:
+Nope. Saving money is priceless. Okay maybe not priceless but `adjuftments` can at least help you
+quantify it. I really enjoy engineering - and this is definitely over-engineered, but that's okay.
+It's fun to build stuff like this and I think it does a good job of showing off some of my Python
+chops. Enjoy :)
 
-- Record Access: At any time you can go back and modify, delete, or create historic expenses.
-  `airtable` has mobile apps, and a responsive WebUI that makes data management easy.
-- Record Entry: Creating new expenses is really easy using `airtable`'s native form functionality.
-
-## How does `adjuftments` integrate with `splitwise`?
-
-`adjuftments` performs a two way sync with records in `splitwise`. This means that after you
-designate a financial partner (a friend in Splitwise and someone who you share expenses with), you
-can create Splitwise expenses directly from `adjuftments`, and also auto sync with expenses created
-inside of `splitwise`. Your ongoing balance with your financial partner is also tracked.
-
-## How do I set up `adjuftments` for myself?
-
-`adjuftments` set up is relatively straightforward. All credentials are set using
-a [`.env`](example.env) file. Inside of this `.env`
-file you will store information like your timezone, local directory path, and API credentials to the
-various services `adjuftments` integrates with:
-
-- `airtable`: frontend and data management
-- `splitwise`: expense sharing integration
-- `imgur`: temporary image hosting intermediary
-- `pushover`: mobile push notifications
-
-More details on the initial setup can be found in
-the [documentation](docs/configuration/initial_setup.md). Once the `.env` file has been configured,
-the entire project
-
-## This seems like an awful lot of trouble to keep track of expenses
-
-Nope.
 
 * * *
 
