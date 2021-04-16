@@ -234,9 +234,11 @@ class Adjuftments(object):
                     airtable_expense["splitwise_id"] = None
                 updated_expense = self._upsert_airtable_expense(airtable_expense=airtable_expense)
                 latest_airtable_data[index] = updated_expense
+                latest_airtable_data[index]["id"] = airtable_expense["id"]
             else:
                 updated_expense = self._upsert_airtable_expense(airtable_expense=airtable_expense)
                 latest_airtable_data[index] = updated_expense
+                latest_airtable_data[index]["id"] = airtable_expense["id"]
         AdjuftmentsNotifications.log_airtable_expenses(airtable_data_array=latest_airtable_data)
         return len(latest_airtable_data)
 

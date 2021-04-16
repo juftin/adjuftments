@@ -25,6 +25,7 @@ class AirtableConfig(object):
     """
     AIRTABLE_API_KEY: str = environ["AIRTABLE_API_KEY"]
     AIRTABLE_BASE: str = environ["AIRTABLE_BASE"]
+    AIRTABLE_EXPENSES_ID: str = environ["AIRTABLE_EXPENSES_ID"]
 
     HISTORIC_BASES: Dict[str, str] = dict()
     _historical_base_prefix = "AIRTABLE_HISTORICAL_BASE_"

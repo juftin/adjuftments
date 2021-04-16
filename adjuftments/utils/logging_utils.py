@@ -14,7 +14,7 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from requests import post, Response
 
-from adjuftments.config import DOT_ENV_FILE_PATH
+from adjuftments.config import AirtableConfig, DOT_ENV_FILE_PATH
 from .parsing_utils import AdjuftmentsEncoder
 
 load_dotenv(DOT_ENV_FILE_PATH, override=True)
@@ -136,14 +136,19 @@ class AdjuftmentsNotifications(logging.StreamHandler):
             transaction_amount = AdjuftmentsEncoder.format_float(
                 amount=airtable_transaction['amount'],
                 float_format='money')
+            record_url = (f"https://airtable.com/"
+                          f"{AirtableConfig.AIRTABLE_EXPENSES_ID}/"
+                          f"{airtable_transaction['id']}")
             date = f"<b>Date:</b> {airtable_transaction['date'][:10]}"
-            description = f"<b>Transaction:</b> {airtable_transaction['transaction']}"
+            description_text = f"<a href='{record_url}'>{airtable_transaction['transaction']}</a>"
+            description = f"<b>Transaction:</b> {description_text}"
             amount = f"<b>Amount:</b> {transaction_amount}"
             category = f"<b>Category:</b> {airtable_transaction['category']}"
             account = f"<b>Account:</b> {airtable_transaction['account_name']}"
             status_dict = dict(NEW="New", UPDATE="Updated", DELETED="Deleted")
             message_title = f"{status_dict[transaction_type]} Adjuftments Expense"
-            message_body = "\n".join([description, amount, category, date, account])
+            message_body = "\n".join([description, amount, category,
+                                      date, account])
             AdjuftmentsNotifications.send_message(message=message_body, title=message_title,
                                                   priority=0, sound="vibrate",
                                                   html=1)
