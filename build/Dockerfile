@@ -9,5 +9,5 @@ RUN apt-get update
 RUN apt-get install -y postgresql-client
 RUN apt-get clean
 
-ENV PYTHONPATH="${PYTHONPATH}:/home/adjuftments_v2/"
-ENTRYPOINT ["/home/adjuftments_v2/build/docker-entrypoint.sh"]
+ENV PYTHONPATH="${PYTHONPATH}:/home/adjuftments/"
+ENTRYPOINT ["/home/adjuftments/build/docker-entrypoint.sh"]

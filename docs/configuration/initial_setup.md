@@ -8,7 +8,7 @@
    this [Template Base](https://airtable.com/invite/l?inviteId=inv0k83ie8uoQg1u6&inviteToken=13d0c39a14edd83fc6e9c8951e0b8176aa38c0982257a58b294873afcedbfbe8)
    and create a duplicate.
 
-2) Populate the `budgets` and `miscellaneous` tables inside of `Splitwise`.
+2) Populate the `Budgets`,  `Miscellaneous`, and `Accounts` tables inside of `Airtable`.
     - Budgets Table:
         - `Proposed Budget`: Enter your total monthly budget for everything minus housing expenses (
           rent / mortgage)
@@ -19,16 +19,11 @@
         - `Monthly Rent`: Enter your monthly housing expenses (rent / mortgage).
         - `Monthly Starting Balance`: This is the checking balance you would like to begin each new
           month with.
-        - `Starting Checking Balance`: Enter your checking balance before entering any new expenses
-        - `Starting Savings Balance`: Enter your primary savings balance before entering any new
-          expenses
-        - `Starting House Balance`: Enter your home savings balance (if applicable) before entering
-          any new expenses
-        - `Starting Shared Balance`: Enter your shared savings balance (if applicable) before
-          entering any new expenses
-        - `Employer`: Enter your employer (or comma separated list of employers). Expenses with the
-          Transaction formatted: `{{Employer}} - Salary` will be counted towards the monthly
-          paycheck count
+    - Accounts Table:
+        - `Type` : The table comes built in with two accounts, `Checking` and `Savings`. You must
+          have only one checking account, and at least one savings accounts
+        - `Default` : One, and only one, savings account must be marked as default.
+        - `Starting Balance`: Enter your beginning of year balance before entering any new expenses
 
 ### Get your API Credentials
 
@@ -52,11 +47,11 @@
     - Run the `splitwise_credentials` webserver
       ```shell
       docker run --rm -it \
-        --volume ${PWD}:/home/adjuftments_v2 \
+        --volume ${PWD}:/home/adjuftments \
         --publish 5000:5000 \
         --entrypoint  "" \
-        adjuftments_v2_api \
-        python /home/adjuftments_v2/adjuftments_v2/utils/splitwise_utils/splitwise_credentials.py
+        adjuftments_api \
+        python /home/adjuftments/adjuftments/utils/splitwise_auth_tool/splitwise_credentials.py
       ```
     - Login via Splitwise @ [http://localhost:5000/](http://localhost:5000/)
     - Copy the credentials from the exposed JSON to the `.env` file
@@ -65,7 +60,7 @@
       select your friend from the left side of the page
     - You should be on a new
       URL: [https://secure.splitwise.com/#/friends/<FRIEND ID>](https://secure.splitwise.com/#/friends)
-    - Grab the Firend ID from the URL and copy it to your `.env` file
+    - Grab the Friend ID from the URL and copy it to your `.env` file
 
 ## Pushover Config
 

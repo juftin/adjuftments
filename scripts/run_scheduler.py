@@ -8,8 +8,8 @@ Run the Scheduler
 
 import logging
 
-from adjuftments_v2.job_scheduler import AdjuftmentsScheduler
-from adjuftments_v2.utils import AdjuftmentsNotifications
+from adjuftments.job_scheduler import AdjuftmentsScheduler
+from adjuftments.utils import AdjuftmentsNotifications
 
 logger = logging.getLogger(__name__)
 

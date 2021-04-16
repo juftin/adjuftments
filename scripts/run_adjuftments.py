@@ -8,11 +8,11 @@ Example Run All Script
 
 import logging
 
-from adjuftments_v2 import Adjuftments
-from adjuftments_v2.config import FlaskDefaultConfig
-from adjuftments_v2.job_scheduler import AdjuftmentsScheduler
-from adjuftments_v2.utils import (AdjuftmentsError, AdjuftmentsNotifications,
-                                  run_adjuftments_refresh_pipeline)
+from adjuftments import Adjuftments
+from adjuftments.config import APIDefaultConfig
+from adjuftments.job_scheduler import AdjuftmentsScheduler
+from adjuftments.utils import (AdjuftmentsError, AdjuftmentsNotifications,
+                               run_adjuftments_refresh_pipeline)
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ if __name__ == "__main__":
                                   pushover_handler],
                         level=logging.INFO)
     # ESTABLISH THE ADJUFTMENTS OBJECT
-    adjuftments_engine = Adjuftments(endpoint=FlaskDefaultConfig.API_ENDPOINT,
-                                     api_token=FlaskDefaultConfig.API_TOKEN,
+    adjuftments_engine = Adjuftments(endpoint=APIDefaultConfig.API_ENDPOINT,
+                                     api_token=APIDefaultConfig.API_TOKEN,
                                      https=False, port=5000)
     # PREPARE THE DATABASE
     adjuftments_engine.prepare_database(clean_start="auto")

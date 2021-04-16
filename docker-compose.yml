@@ -60,16 +60,15 @@ services:
             TZ:                 ${TZ}
             DOCKER_ENVIRONMENT: "True"
         volumes:
-            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
+            - ${DOCKER_DIRECTORY}/:/home/adjuftments/
         networks:
             adjuftments: null
         ports:
             - "5000:5000"
-        working_dir:    /home/adjuftments_v2
+        working_dir:    /home/adjuftments
         command:
-            - /home/adjuftments_v2/scripts/database_setup.sh
-            - gunicorn --bind 0.0.0.0:5000 --workers=2 ${WSGI_APPLICATION} # PRODUCTION
-            # - flask run --host=0.0.0.0 # API TESTING
+            - /home/adjuftments/scripts/database_setup.sh
+            - gunicorn --config adjuftments/config/gunicorn.conf.py
         restart:        unless-stopped
         depends_on:
             - database
@@ -103,40 +102,14 @@ services:
             TZ:                 ${TZ}
             DOCKER_ENVIRONMENT: "True"
         volumes:
-            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
+            - ${DOCKER_DIRECTORY}/:/home/adjuftments/
         networks:
             adjuftments: null
-        working_dir:    /home/adjuftments_v2/adjuftments_v2
+        working_dir:    /home/adjuftments
         command:
-            - /home/adjuftments_v2/scripts/wait-for-api.sh
-            - /home/adjuftments_v2/scripts/run_adjuftments.py
+            - /home/adjuftments/scripts/wait-for-api.sh
+            - /home/adjuftments/scripts/run_adjuftments.py
         restart:        "no"
         depends_on:
             - database
             - api
-
-    ####################################
-    # ADJUFTMENTS JOB SCHEDULER
-    ####################################
-
-#    job-scheduler:
-#        container_name: adjuftments-job-scheduler
-#        build:
-#            context:    ${DOCKER_DIRECTORY}/build/
-#            dockerfile: Dockerfile
-#        environment:
-#            TZ:                 ${TZ}
-#            DOCKER_ENVIRONMENT: "True"
-#        volumes:
-#            - ${DOCKER_DIRECTORY}/:/home/adjuftments_v2/
-#        networks:
-#            adjuftments: null
-#        working_dir:    /home/adjuftments_v2/adjuftments_v2
-#        command:
-#            - /home/adjuftments_v2/scripts/wait-for-api.sh
-#            - /home/adjuftments_v2/scripts/run_scheduler.py
-#        restart:        "no"
-#        depends_on:
-#            - database
-#            - api
-#            - adjuftments
