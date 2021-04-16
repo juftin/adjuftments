@@ -20,10 +20,8 @@ from .finance import finance
 from .images import images
 from .splitwise import splitwise
 
-console_handler = logging.StreamHandler()
 logging.basicConfig(format="%(asctime)s [%(levelname)8s]: %(message)s [%(name)s]",
-                    handlers=[console_handler],
-                    level=logging.WARNING)
+                    level=logging.INFO)
 
 API_BLUEPRINTS: List[Blueprint] = [
     admin,
