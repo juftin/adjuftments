@@ -234,11 +234,9 @@ class Adjuftments(object):
                     airtable_expense["splitwise_id"] = None
                 updated_expense = self._upsert_airtable_expense(airtable_expense=airtable_expense)
                 latest_airtable_data[index] = updated_expense
-                latest_airtable_data[index]["id"] = airtable_expense["id"]
             else:
                 updated_expense = self._upsert_airtable_expense(airtable_expense=airtable_expense)
                 latest_airtable_data[index] = updated_expense
-                latest_airtable_data[index]["id"] = airtable_expense["id"]
         AdjuftmentsNotifications.log_airtable_expenses(airtable_data_array=latest_airtable_data)
         return len(latest_airtable_data)
 
@@ -698,12 +696,13 @@ class Adjuftments(object):
         updated_record = self._prepare_expenses_record_for_upsert(record=airtable_expense)
         updated_record = AdjuftmentsEncoder.parse_object(obj=updated_record)
         self._load_db_record(table="expenses", record=updated_record)
-        updated_record.pop("created_at", None)
-        updated_record.pop("id")
+        created_at = updated_record.pop("created_at", None)
         if not isinstance(updated_record["account"], list):
             updated_record["account"] = [updated_record["account"]]
         self._update_airtable_record(table="expenses", record_id=record_id,
                                      fields=updated_record)
+        updated_record["id"] = record_id
+        updated_record["created_at"] = created_at
         return updated_record
 
     def _prepare_expenses_record_for_upsert(self, record: dict) -> dict:
@@ -1090,7 +1089,6 @@ class Adjuftments(object):
         """
         Get and process some budgets data
         """
-        self._truncate_db_table(table="budgets")
         data_array = self._get_airtable_data(table="budgets", params=None)
         self._load_db_data(table="budgets", data_array=data_array)
 
@@ -1098,7 +1096,6 @@ class Adjuftments(object):
         """
         Get and process some categories data
         """
-        self._truncate_db_table(table="categories")
         data_array = self._get_airtable_data(table="categories", params=None)
         self._load_db_data(table="categories", data_array=data_array)
 
@@ -1124,7 +1121,6 @@ class Adjuftments(object):
         """
         Get and process some miscellaneous data
         """
-        self._truncate_db_table(table="miscellaneous")
         data_array = self._get_airtable_data(table="miscellaneous", params=None)
         self._load_db_data(table="miscellaneous", data_array=data_array)
 
@@ -1132,7 +1128,6 @@ class Adjuftments(object):
         """
         Get and process some stocks data
         """
-        self._truncate_db_table(table="stocks")
         data_array = self._get_airtable_data(table="stocks", params=None)
         self._load_db_data(table="stocks", data_array=data_array)
         self.refresh_stocks_data()
