@@ -234,9 +234,11 @@ class Adjuftments(object):
                     airtable_expense["splitwise_id"] = None
                 updated_expense = self._upsert_airtable_expense(airtable_expense=airtable_expense)
                 latest_airtable_data[index] = updated_expense
+                latest_airtable_data[index]["id"] = airtable_expense["id"]
             else:
                 updated_expense = self._upsert_airtable_expense(airtable_expense=airtable_expense)
                 latest_airtable_data[index] = updated_expense
+                latest_airtable_data[index]["id"] = airtable_expense["id"]
         AdjuftmentsNotifications.log_airtable_expenses(airtable_data_array=latest_airtable_data)
         return len(latest_airtable_data)
 
@@ -696,13 +698,12 @@ class Adjuftments(object):
         updated_record = self._prepare_expenses_record_for_upsert(record=airtable_expense)
         updated_record = AdjuftmentsEncoder.parse_object(obj=updated_record)
         self._load_db_record(table="expenses", record=updated_record)
-        created_at = updated_record.pop("created_at", None)
+        updated_record.pop("created_at", None)
+        updated_record.pop("id")
         if not isinstance(updated_record["account"], list):
             updated_record["account"] = [updated_record["account"]]
         self._update_airtable_record(table="expenses", record_id=record_id,
                                      fields=updated_record)
-        updated_record["id"] = record_id
-        updated_record["created_at"] = created_at
         return updated_record
 
     def _prepare_expenses_record_for_upsert(self, record: dict) -> dict:
