@@ -986,6 +986,7 @@ class Adjuftments(object):
                                      transaction=transaction_description,
                                      splitwise=False,
                                      splitwise_id=splitwise_id,
+                                     account=None,
                                      delete=False)
                 reencoded_dict = AdjuftmentsEncoder.parse_object(obj=airtable_dict)
                 publish_manifest.append(reencoded_dict)
