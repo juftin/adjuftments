@@ -37,7 +37,7 @@ def run_adjuftments_refresh_pipeline(sleep_config: List[int],
                                      primary_function: Callable,
                                      finally_function: Optional[Callable] = None,
                                      error_index: Optional[int] = None,
-                                     catchable_error: Exception = BaseException,
+                                     catchable_error: tuple = tuple([BaseException]),
                                      between_loops_sleep: int = 30,
                                      **kwargs) -> None:
     """
@@ -65,7 +65,8 @@ def run_adjuftments_refresh_pipeline(sleep_config: List[int],
     -------
     None
     """
-    assert catchable_error is not AdjuftmentsRefreshError
+    for error in catchable_error:
+        assert error is not AdjuftmentsRefreshError
     # CREATE AN EMPTY ATTEMPTS LIST AND ADD A FINAL SLEEP OF 0 TO SLEEP CONFIG
     retry_attempts = list()
     pipeline_start_time = datetime.now()
@@ -103,7 +104,12 @@ def run_adjuftments_refresh_pipeline(sleep_config: List[int],
         # RUN THE FINALLY FUNCTION WITH *ARGS FROM PRIMARY
         finally:
             if finally_function is not None:
-                finally_function(*returned_value)
+                try:
+                    finally_function(*returned_value)
+                except catchable_error:
+                    error_type = capture_error(log_error=False)
+                    error_message = f"Handled Exception: {error_type}."
+                    logger.warning(error_message)
             # RECORD LOOP TIME
             loop_end_time = datetime.now()
             logger.info(f"Adjuftments Refresh Loop Completed: {loop_end_time - loop_start_time}. "

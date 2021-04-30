@@ -8,6 +8,8 @@ Example Run All Script
 
 import logging
 
+from requests import exceptions
+
 from adjuftments import Adjuftments
 from adjuftments.config import APIDefaultConfig
 from adjuftments.job_scheduler import AdjuftmentsScheduler
@@ -41,5 +43,5 @@ if __name__ == "__main__":
                                      primary_function=adjuftments_engine.refresh_adjuftments_data,
                                      finally_function=adjuftments_engine.refresh_dashboard,
                                      error_index=error_log_index,
-                                     catchable_error=AdjuftmentsError,
+                                     catchable_error=(AdjuftmentsError, exceptions.ConnectionError),
                                      between_loops_sleep=20)
