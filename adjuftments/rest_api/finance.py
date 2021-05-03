@@ -20,7 +20,6 @@ from requests.api import get
 from sqlalchemy import asc, Table
 
 from adjuftments import Airtable, Dashboard
-from adjuftments.application import app
 from adjuftments.config import AirtableConfig, APIEndpoints, DOT_ENV_FILE_PATH
 from adjuftments.schema import AccountsTable, DashboardTable, ExpensesTable
 from adjuftments.utils import AdjuftmentsEncoder
@@ -31,7 +30,7 @@ logger = logging.getLogger(__name__)
 finance = Blueprint(name="finance", import_name=__name__)
 
 
-@app.route(rule=APIEndpoints.EXPENSE_CATEGORIES, methods=["GET"])
+@finance.route(rule=APIEndpoints.EXPENSE_CATEGORIES, methods=["GET"])
 @login_required
 def get_current_months_expenses() -> Response:
     """
@@ -69,7 +68,7 @@ def get_current_months_expenses() -> Response:
     return jsonify(formatted_response)
 
 
-@app.route(rule=f"{APIEndpoints.STOCK_TICKER_API}/<ticker>", methods=["GET"])
+@finance.route(rule=f"{APIEndpoints.STOCK_TICKER_API}/<ticker>", methods=["GET"])
 @login_required
 def get_stock_ticker(ticker: str) -> Response:
     """
@@ -88,11 +87,11 @@ def get_stock_ticker(ticker: str) -> Response:
     return jsonify(stocks_response)
 
 
-@app.route(rule=APIEndpoints.DASHBOARD_GENERATOR, methods=["POST", "GET"])
+@finance.route(rule=APIEndpoints.DASHBOARD_GENERATOR, methods=["POST"])
 @login_required
 def refresh_dashboard() -> Union[Response, str]:
     """
-    Interact with the Adjuftments Dasboard.
+    Interact with the Adjuftments Dashboard.
 
     - GET: Returns the Dashboard table as a rendered HTML Template
     - POST: Refreshes the Dashboard, returning the new data
@@ -101,13 +100,6 @@ def refresh_dashboard() -> Union[Response, str]:
     -------
     Response
     """
-    if request.method.upper() == "GET":
-        dashboard_data = DashboardTable.query. \
-            with_entities(DashboardTable.measure, DashboardTable.value). \
-            order_by(asc(DashboardTable.ordinal_position)). \
-            all()
-        return render_template("dashboard.html", items=dashboard_data)
-
     airtable_object = Airtable(base=AirtableConfig.AIRTABLE_BASE,
                                table="dashboard")
 
@@ -143,3 +135,20 @@ def refresh_dashboard() -> Union[Response, str]:
     response_dict = dict(manifest=dashboard_manifest,
                          dashboard=response_array)
     return jsonify(response_dict)
+
+
+@finance.route(rule=APIEndpoints.DASHBOARD_HTML, methods=["GET"])
+def get_dashboard_html() -> Union[Response, str]:
+    """
+    Returns the Dashboard table as a rendered HTML Template
+
+    Returns
+    -------
+    Response
+    """
+    logger.critical("dfsdfgsdfa")
+    dashboard_data = DashboardTable.query. \
+        with_entities(DashboardTable.measure, DashboardTable.value). \
+        order_by(asc(DashboardTable.ordinal_position)). \
+        all()
+    return render_template("dashboard.html", items=dashboard_data)

@@ -75,6 +75,7 @@ class APIEndpoints(object):
 
     STOCK_TICKER_API: str = f"{FINANCE_BASE}/stocks"
     DASHBOARD_GENERATOR: str = f"{FINANCE_BASE}/dashboard"
+    DASHBOARD_HTML: str = "/dashboard"
     EXPENSE_CATEGORIES: str = f"{FINANCE_BASE}/categories"
     IMAGES_ENDPOINT: str = f"{FINANCE_BASE}/images"
 

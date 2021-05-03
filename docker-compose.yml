@@ -68,7 +68,7 @@ services:
         working_dir:    /home/adjuftments
         command:
             - /home/adjuftments/scripts/database_setup.sh
-            - gunicorn --config adjuftments/config/gunicorn.conf.py
+            - gunicorn --config /home/adjuftments/adjuftments/config/gunicorn.conf.py
         restart:        unless-stopped
         depends_on:
             - database
