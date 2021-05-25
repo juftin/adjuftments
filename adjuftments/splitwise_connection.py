@@ -8,6 +8,7 @@ Splitwise Interactions
 
 from datetime import datetime
 import logging
+from math import floor
 from random import shuffle
 from typing import List, Optional, Tuple, Union
 
@@ -261,10 +262,11 @@ class Splitwise(SplitwiseConn):
             A tuple is returned with each participant's amount
         """
         assert amount == round(amount, 2)
-        first_owe = second_owe = (amount / 2)
+        first_owe = second_owe = amount / 2
         # IF EVEN DECIMALS
-        if (amount * 100 % 2) == 0:
-            amounts_due = (first_owe, second_owe)
+        pennies = int(round((amount - floor(amount)) * 100, 2))
+        if (pennies % 2) == 0:
+            amounts_due = (round(first_owe, 2), round(second_owe, 2))
         # OTHERWISE, RANDOMLY CHARGE A PENNY TO SOMEONE
         else:
             first_owe += 0.005
@@ -351,7 +353,7 @@ class Splitwise(SplitwiseConn):
         try:
             assert expense_errors is None
         except AssertionError:
-            raise expense_errors
+            raise SplitwiseException(expense_errors["base"][0])
         processed_response = self.process_expense(expense=expense_response)
         logger.info(f"Expense Created: {processed_response['id']}")
         self._comment_on_expense(expense_id=processed_response['id'])
