@@ -348,7 +348,10 @@ class Splitwise(SplitwiseConn):
         new_expense.addUser(user=financial_partner)
         # SUBMIT THE EXPENSE AND GET THE RESPONSE
         expense_response, expense_errors = self.createExpense(expense=new_expense)
-        assert expense_errors is None
+        try:
+            assert expense_errors is None
+        except AssertionError:
+            raise SplitwiseException(expense_errors)
         processed_response = self.process_expense(expense=expense_response)
         logger.info(f"Expense Created: {processed_response['id']}")
         self._comment_on_expense(expense_id=processed_response['id'])
