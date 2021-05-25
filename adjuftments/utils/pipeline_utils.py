@@ -72,6 +72,7 @@ def run_adjuftments_refresh_pipeline(sleep_config: List[int],
     pipeline_start_time = datetime.now()
     while True:
         # CAPTURE SOME IMPORTANT INFO AT THE BEGINNING OF EACH LOOP
+        returned_value = dict()
         loop_start_time = datetime.now()
         number_retry_attempts = len(retry_attempts)
         sleep_config_size = len(sleep_config)
