@@ -16,7 +16,7 @@ from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin, urlunparse
 
 from pytz import timezone
-from requests import delete, get, post, Response
+from requests import delete, get, post
 
 from adjuftments.config import AirtableConfig, APIEndpoints
 from adjuftments.utils import AdjuftmentsEncoder, AdjuftmentsError, AdjuftmentsNotifications
