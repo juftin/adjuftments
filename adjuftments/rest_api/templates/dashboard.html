@@ -1,17 +1,6 @@
 <!DOCTYPE html>
 <html lang="">
 <head>
-    <script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-178537159-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-
-        gtag('js', new Date());
-        gtag('config', 'UA-178537159-1');
-    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="viewport" content="width=device-height, initial-scale=1, maximum-scale=1">
@@ -20,11 +9,42 @@
     <title>adjuftments: Dashboard</title>
     <link rel="shortcut icon"
           href="https://raw.githubusercontent.com/juftin/resume/master/resume/web/favicon.png">
+    <style>
+        #dashboard {
+            font-family: Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #dashboard td, #dashboard th {
+            border: 1px solid #ddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        #dashboard tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #dashboard tr:hover {
+            background-color: #ddd;
+        }
+
+        #dashboard th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+
 </head>
 
 <body>
 
-<table style="width:100%" , border="1" , aria-describedby="Adjuftments Dashboard Data">
+<table id="dashboard" style="width:100%" , border="1" ,
+       aria-describedby="Adjuftments Dashboard Data">
     <tr>
         <th scope="col">Measure</th>
         <th scope="col">Value</th>
