@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-height, initial-scale=1, maximum-scale=1">
+    <meta name="google" content="notranslate">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>adjuftments: Dashboard</title>
+    <link rel="shortcut icon"
+          href="https://raw.githubusercontent.com/juftin/resume/master/resume/web/favicon.png">
+    <style>
+        #dashboard {
+            font-family: Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #dashboard td, #dashboard th {
+            border: 1px solid #ddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        #dashboard tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #dashboard tr:hover {
+            background-color: #ddd;
+        }
+
+        #dashboard th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<table id="dashboard" style="width:100%" , border="1" ,
+       aria-describedby="Adjuftments Dashboard Data">
+    <tr>
+        <th scope="col">Measure</th>
+        <th scope="col">Value</th>
+    </tr>
+    {% for item in items %}
+    <tr>
+        <td>{{item.measure}}</td>
+        <td>{{item.value}}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>

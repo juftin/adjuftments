@@ -1,0 +1,115 @@
+version: "3.7"
+
+################################################################################
+# NETWORKING CONFIGURATION
+################################################################################
+
+networks:
+    adjuftments:
+        driver: bridge
+
+################################################################################
+# SERVICES CONFIGURATION
+################################################################################
+
+services:
+
+    ####################################
+    # POSTGRES DATABASE
+    ####################################
+
+    database:
+        container_name: adjuftments-database
+        image:          postgres:13.1
+        environment:
+            POSTGRES_USER:     ${DATABASE_USER}
+            POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+            POSTGRES_DB:       ${DATABASE_DB}
+            ALLOW_IP_RANGE:    "0.0.0.0/0"
+            TZ:                UTC
+            PG_TZ:             UTC
+        volumes:
+            - ${DOCKER_DIRECTORY}/postgres/:/var/lib/postgresql/data
+        networks:
+            adjuftments: null
+        ports:
+            - "5432:5432"
+        restart:        unless-stopped
+        healthcheck:
+            test: [ "CMD-SHELL",
+                    "pg_isready --username=${DATABASE_USER} --dbname=${DATABASE_DB}" ]
+            interval:     10s
+            timeout:      5s
+            retries:      5
+            start_period: 10s
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+
+    ####################################
+    # FLASK API
+    ####################################
+
+    api:
+        container_name: adjuftments-api
+        build:
+            context:    ${DOCKER_DIRECTORY}/build/
+            dockerfile: Dockerfile
+        environment:
+            TZ:                 ${TZ}
+            DOCKER_ENVIRONMENT: "True"
+        volumes:
+            - ${DOCKER_DIRECTORY}/:/home/adjuftments/
+        networks:
+            adjuftments: null
+        ports:
+            - "5000:5000"
+        working_dir:    /home/adjuftments
+        command:
+            - /home/adjuftments/scripts/database_setup.sh
+            - gunicorn --config /home/adjuftments/adjuftments/config/gunicorn.conf.py
+        restart:        unless-stopped
+        depends_on:
+            - database
+        healthcheck:
+            test:         curl --fail -s http://${ADJUFTMENTS_API_HOST}:5000/api/1.0/admin/health || exit 1
+            interval:     1m
+            timeout:      10s
+            retries:      3
+            start_period: 10s
+        labels:
+            # PLACING THE API BEHIND THE LOCAL TRAEFIK REVERSE PROXY
+            #   - THE API IS STILL INTERNALLY ACCESSIBLE AT LOCALHOST VIA PORT EXPOSURE
+            #   - THESE LABELS DON'T DO ANYTHING UNLESS TRAEFIK REVERSE PROXY CONFIGURED (https://github.com/juftin/traefik)
+            traefik.enable:                                         true
+            traefik.http.routers.api-rtr.rule:                      Host(`${API_SUBDOMAIN}.${DOMAIN_NAME}`)
+            traefik.http.routers.api-rtr.service:                   api-svc
+            traefik.http.services.api-svc.loadbalancer.server.port: 5000
+            traefik.http.routers.api-rtr.entrypoints:               http
+            traefik.http.routers.api-rtr.middlewares:               chain-local-testing@file
+
+    ####################################
+    # ADJUFTMENTS AIRTABLE EXECUTOR
+    ####################################
+
+    adjuftments:
+        container_name: adjuftments
+        build:
+            context:    ${DOCKER_DIRECTORY}/build/
+            dockerfile: Dockerfile
+        environment:
+            TZ:                 ${TZ}
+            DOCKER_ENVIRONMENT: "True"
+        volumes:
+            - ${DOCKER_DIRECTORY}/:/home/adjuftments/
+        networks:
+            adjuftments: null
+        working_dir:    /home/adjuftments
+        command:
+            - /home/adjuftments/scripts/wait-for-api.sh
+            - /home/adjuftments/scripts/run_adjuftments.py
+        restart:        "no"
+        depends_on:
+            - database
+            - api
