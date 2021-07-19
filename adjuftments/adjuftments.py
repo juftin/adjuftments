@@ -12,6 +12,7 @@ from json import loads
 from json.decoder import JSONDecodeError
 import logging
 from os import getenv
+from time import sleep
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin, urlunparse
 
@@ -512,8 +513,14 @@ class Adjuftments(object):
         dict
         """
         api_endpoint = urljoin(self.endpoint, f"{APIEndpoints.STOCK_TICKER_API}/{ticker.lower()}")
-        response = get(url=api_endpoint,
-                       headers=self.headers)
+        try:
+            response = get(url=api_endpoint,
+                           headers=self.headers)
+            assert response.status_code == 200
+        except AssertionError:
+            sleep(5)
+            response = get(url=api_endpoint,
+                           headers=self.headers)
         if response.status_code != 200:
             raise AdjuftmentsError(response.text)
         return loads(response.content)
