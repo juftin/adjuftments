@@ -78,7 +78,12 @@ def get_stock_ticker(ticker: str) -> Response:
     ----------
     ticker: str
     """
-    url_response = get(url=f"https://query1.finance.yahoo.com/v7/finance/options/{ticker}")
+    _user_agent_string = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/39.0.2171.95 Safari/537.36")
+    user_agent_headers = {'User-Agent': _user_agent_string}
+    url_response = get(url=f"https://query2.finance.yahoo.com/v7/finance/options/{ticker}",
+                       headers=user_agent_headers)
     response = loads(url_response.content)
     stocks_response = dict(
         symbol=response["optionChain"]["result"][0]["quote"]["symbol"],
