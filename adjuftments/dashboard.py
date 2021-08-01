@@ -192,7 +192,7 @@ class Dashboard(object):
             expected_income = 2 * bimonthly_income
         elif pay_check_count == 1:
             expected_income = 1 * bimonthly_income
-        elif pay_check_count == 2:
+        elif pay_check_count >= 2:
             expected_income = 0 * bimonthly_income
         return expected_income
 
